@@ -49,7 +49,7 @@ The puzzle is solved when **every bottle** is either:
 **Variables:**
 
 T - Total number of bottles <br>
-C - Capacity of each bottle <br>
+C - Capacity of each bottle (the same for every bottle) <br>
 N - Total number of distinct colors
 
 **State representation:**
@@ -74,7 +74,7 @@ Read from file, any arbitrary distribution of colors across bottles. Example abo
 
 **Goal State:**
 
-∀<sub>i</sub> $\in$ {0, ..., T-1}: B<sub>i</sub> = () ∨ (|B<sub>i</sub> = C ∧ | {c $\in$ B<sub>i</sub>}| = 1)
+∀<sub>i</sub> $\in$ {0, ..., T-1}: B<sub>i</sub> = () ∨ (|B<sub>i</sub>| = C ∧ | {c $\in$ B<sub>i</sub>}| = 1)
 
 Every bottle is either empty, or full with exactly one color. The specific color in each bottle does not matter. For the previous example, this could be a final state:
 
@@ -83,3 +83,9 @@ B1 = (2, 2, 2, 2) # G G G G <br>
 B2 = (3, 3, 3, 3) # B B B B <br>
 B3 = (1, 1, 1, 1) # R R R R <br>
 B4 = ()
+
+Operations
+
+| Name | Preconditions                                              | Effect                                                   | Cost |
+| ---- | ---------------------------------------------------------- | -------------------------------------------------------- | ---- |
+| Pour | i≠j ∧ i not empty ∧ j not full ∧ (j empty ∨ top(i)=top(j)) | pours until to j until (i empty ∧ j full ∧ top(i)≠top(j) | 1    |
