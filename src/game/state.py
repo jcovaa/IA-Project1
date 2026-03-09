@@ -58,3 +58,29 @@ def pour(game_state, bottle1, bottle2):
       new_bottles[bottle2].append(new_bottles[bottle1].pop())
 
    return GameState(new_bottles, game_state.capacity), 1
+
+
+def game_states(game_state):
+   new_states = []
+   for i in range(len(game_state.bottles)):
+      for j in range(len(game_state.bottles)):
+         if i == j:
+            continue
+         result = pour(game_state, i, j)
+         if result:
+            new_states.append(result)
+   return new_states
+
+def goal_state(game_state):
+   # Every bottle empty or full with the same color
+   for bottle in game_state.bottles:
+      # Empty bottle
+      if not bottle:
+         continue
+      # Bottle is not full
+      if len(bottle) != game_state.capacity:
+         return False
+      # Bottle is not full with the same color
+      if len(set(bottle)) != 1:
+         return False
+   return True
