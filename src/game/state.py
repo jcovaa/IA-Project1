@@ -1,3 +1,16 @@
+'''
+Bottles defined as list of colors, where the last color is the top of the bottle. For example:
+bottles = [
+   [1, 2, 1, 3] # R G R B
+   [2, 2, 1, 1] # G G R R
+   [3, 3, 2, 3] # B B G B
+   []
+   []
+]
+Capacity defined as the maximum number of colors a bottle can hold. For example:
+capacity = 3
+'''
+
 class GameState:
    def __init__(self, bottles, capacity):
       # hashable tuple for storing bottles in a set
@@ -22,14 +35,14 @@ def pour(game_state, bottle1, bottle2):
    # Check if source bottle is different from destination bottle
    if bottle1 == bottle2:
       return None
-   # Check if source and destination are valid and exist
-   if not src or not dest:
+   # Check if source is valid
+   if not src:
       return None
-   # Check if destination bottle is full
-   if len(dest) == game_state.capacity:
+   # Check if source bottle is complete and destination bottle is full
+   if len(set(src)) == 1 and len(src) == game_state.capacity:
       return None
-   # Check if the last color in the source bottle is the same as the last color
-   if src[-1] != dest[-1]:
+   # Check if the last color in the source bottle is the same as the last color in the destination bottle
+   if dest and src[-1] != dest[-1]:
       return None
 
    color = src[-1]
