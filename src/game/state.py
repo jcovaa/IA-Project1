@@ -14,7 +14,7 @@ capacity = 3
 class GameState:
    def __init__(self, bottles, capacity):
       # hashable tuple for storing bottles in a set
-      self.bottles = tuple(tuple(b) for b in bottles)
+      self.bottles = [list(b) for b in bottles]
       self.capacity = capacity
 
    '''Needed for the visited list'''
@@ -22,7 +22,7 @@ class GameState:
       return self.bottles == other.bottles
    
    def __hash__(self):
-      return hash(self.bottles)
+      return hash(tuple(tuple(b) for b in self.bottles))
    
    def __str__(self):
       return f"GameState(bottles={self.bottles}, capacity={self.capacity})"
@@ -50,6 +50,9 @@ def pour(game_state, bottle1, bottle2):
    units_to_pour = sum(1 for c in reversed(src) if c == color)
    # Calculate how many units can be poured into the destination bottle
    space = game_state.capacity - len(dest)
+
+   if not space:
+      return None
 
    units_to_pour = min(units_to_pour, space)
 
