@@ -46,8 +46,12 @@ def pour(game_state, bottle1, bottle2):
       return None
 
    color = src[-1]
-   # Count how many units of the same color are at the top of the source bottle
-   units_to_pour = sum(1 for c in reversed(src) if c == color)
+   # Count only the contiguous top block of the same color
+   units_to_pour = 0
+   for c in reversed(src):
+      if c != color:
+         break
+      units_to_pour += 1
    # Calculate how many units can be poured into the destination bottle
    space = game_state.capacity - len(dest)
 
