@@ -38,7 +38,7 @@ def pour(game_state, bottle1, bottle2):
    # Check if source is valid
    if not src:
       return None
-   # Check if source bottle is complete and destination bottle is full
+   # Check if source bottle is complete with the same color (can't pour from a bottle that is already complete)
    if len(set(src)) == 1 and len(src) == game_state.capacity:
       return None
    # Check if the last color in the source bottle is the same as the last color in the destination bottle
