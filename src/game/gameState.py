@@ -38,10 +38,12 @@ def pour(game_state, bottle1, bottle2):
    # Check if source is valid
    if not src:
       return None
-   if not dest:
+
+   # Check if source bottle is complete with the same color (can't pour from a bottle that is already complete)
+   if len(set(src)) == 1 and len(src) == game_state.capacity:
       return None
-   # Check if source bottle is complete 
-   if len(src) == game_state.capacity:
+   
+   if len(dest)  == game_state.capacity: 
       return None
    
    pour_color = src[-1]
@@ -56,11 +58,12 @@ def pour(game_state, bottle1, bottle2):
       if c != pour_color:
          break
       units_to_pour += 1
+
+   if units_to_pour == 0:
+      return None
+   
    # Calculate how many units can be poured into the destination bottle
    space = game_state.capacity - len(dest)
-
-   if not space:
-      return None
 
    units_to_pour = min(units_to_pour, space)
 
