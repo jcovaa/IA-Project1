@@ -1,6 +1,16 @@
-from game.state import GameState, pour, game_states
+from game.gameState import GameState, pour, game_states, goal_state
+from search.algorithms import breadth_first_search, depth_first_search, depth_limited_search, iterative_deepening_search, greedy_search, a_star_search
 
+def print_solution(node):
+    path = []
+    current = node
+    while current:
+        path.append(current.state)
+        current = current.parent
 
+    for state in reversed(path):
+        print(state)
+        
 def main():
 	# Example starting bottles (each list: bottom -> top)
 	bottles = [
@@ -18,17 +28,21 @@ def main():
 
 	print()
 
-	# Try a single pour and show result
-	result = pour(s, 0, 3)
-	print("Result of pouring from bottle 0 to 3:")
-	print(result[0] if result else result)
+	goal_bfs = breadth_first_search(s, goal_state, game_states)
+	print("BFS solution")
+	print_solution(goal_bfs)
+      
+	goal_dfs = depth_first_search(s, goal_state, game_states)
+	print("DFS solution")
+	print_solution(goal_dfs)
 
-	print()
+	goal_dls = depth_limited_search(s, goal_state, game_states, depth_limit=10)
+	print("DLS solution")
+	print_solution(goal_dls)
 
-	# Show all immediate child states
-	print("Immediate children of the initial state:")
-	for child, _cost in game_states(s):
-		print(child)
+	goal_ids = iterative_deepening_search(s, goal_state, game_states, depth_limit=10)
+	print("IDS solution")
+	print_solution(goal_ids)
 
 
 if __name__ == "__main__":

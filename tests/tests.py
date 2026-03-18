@@ -1,6 +1,6 @@
 import unittest
 import init
-from src.game.state import GameState, pour, game_states, goal_state
+from game.gameState import GameState, pour, game_states, goal_state
 
 class TestGameState(unittest.TestCase):
 

@@ -38,18 +38,22 @@ def pour(game_state, bottle1, bottle2):
    # Check if source is valid
    if not src:
       return None
-   # Check if source bottle is complete with the same color (can't pour from a bottle that is already complete)
-   if len(set(src)) == 1 and len(src) == game_state.capacity:
+   if not dest:
       return None
+   # Check if source bottle is complete 
+   if len(src) == game_state.capacity:
+      return None
+   
+   pour_color = src[-1]
    # Check if the last color in the source bottle is the same as the last color in the destination bottle
-   if dest and src[-1] != dest[-1]:
+   if dest and pour_color != dest[-1]:
       return None
 
-   color = src[-1]
+  
    # Count only the contiguous top block of the same color
    units_to_pour = 0
    for c in reversed(src):
-      if c != color:
+      if c != pour_color:
          break
       units_to_pour += 1
    # Calculate how many units can be poured into the destination bottle
