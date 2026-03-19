@@ -1,5 +1,5 @@
 from game.gameState import GameState, pour, game_states, goal_state
-from search.algorithms import breadth_first_search, depth_first_search, depth_limited_search, iterative_deepening_search, greedy_search, a_star_search
+from search.algorithms import breadth_first_search, depth_first_search, depth_limited_search, iterative_deepening_search, greedy_search, a_star_search, heuristic3
 
 def print_solution(node):
     path = []
@@ -15,7 +15,7 @@ def main():
 	# Example starting bottles (each list: bottom -> top)
 	bottles = [
 		[1, 2, 1],
-		[2, 2, 1],
+		[2, 1, 3],
 		[3, 3, 2],
 		[],
 		[]
@@ -43,6 +43,14 @@ def main():
 	goal_ids = iterative_deepening_search(s, goal_state, game_states, depth_limit=10)
 	print("IDS solution")
 	print_solution(goal_ids)
+      
+	goal_greedy = greedy_search(s, goal_state, game_states, heuristic3)
+	print("Greedy solution")
+	print_solution(goal_greedy)
+
+	goal_astar = a_star_search(s, goal_state, game_states, heuristic3)
+	print("A* solution")
+	print_solution(goal_astar)
 
 
 if __name__ == "__main__":

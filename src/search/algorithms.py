@@ -90,7 +90,7 @@ def iterative_deepening_search(initial_state, goal_state_func, operators_func, d
 
 def greedy_search(initial_state, goal_state_func, operators_func, heuristic_func):
    root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = [(root, heuristic_func(root))]   # initialize the queue to store the nodes
+   queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
 
    visited = set()
 
@@ -121,7 +121,7 @@ def greedy_search(initial_state, goal_state_func, operators_func, heuristic_func
 
 def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func):
    root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = [(root, heuristic_func(root))]   # initialize the queue to store the nodes
+   queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
 
    visited = set()
 
@@ -158,3 +158,38 @@ def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func
 
 
 # fazer heuristicas
+
+def heuristic1(state):
+    score = 0
+    for bottle in state.bottles:
+        if not bottle:
+            continue
+        if len(bottle) != state.capacity or len(set(bottle)) != 1:
+            score += 1
+    return score
+
+def heuristic2(state):
+    score = 0
+    for bottle in state.bottles:
+        if not bottle:
+            continue
+        top_color = bottle[-1]
+        for color in bottle:
+            if color != top_color:
+                score += 1
+    return score
+
+def heuristic3(state):
+    score = 0
+    for bottle in state.bottles:
+        if not bottle:
+            continue
+        
+        # penaliza mistura
+        score += len(set(bottle)) - 1
+        
+        # penaliza não estar cheia
+        if len(bottle) != state.capacity:
+            score += 1
+
+    return score
