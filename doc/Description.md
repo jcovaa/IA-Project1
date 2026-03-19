@@ -14,6 +14,16 @@ Students should focus on firstly developing a simple version of the game with a 
 
 ## Description
 
+The **Water Sort problem** is a logic puzzle played on a set of bottles **T bottles**, each with a  **capacity of C units**. The bottles are initially filled with segments of colored water, stacked on top of one another. There are **N distinct colors**, with exactly **C units of each color** At least **2 bottles start empty**, providing the necessary room to maneuver.
+
+A **move** consists of pouring the top color segment from one bottle into another. That is only valid if:
+- the destination bottle is not full;
+- the top of the destination bottle is either empty or matches the color being poured.
+
+When pouring, **all contiguous units of the same color at the top** of the bottle are moved together as a singles segment, until it has no more space in the destination bottle or the color of the water in the source changes.
+
+The puzzle is **solved** when every non-empty bottle contains exactly one color filling it completely.
+
 A set of **T bottles**, each with a **capacity of C units**, are initially filled with colored water.
 There are **N distinct colors**, with exactly **C units of each color** distributed across the bottles. At least 2 bottles are initially empty.
 
