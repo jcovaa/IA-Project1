@@ -14,16 +14,6 @@ Students should focus on firstly developing a simple version of the game with a 
 
 ## Description
 
-The **Water Sort problem** is a logic puzzle played on a set of bottles **T bottles**, each with a  **capacity of C units**. The bottles are initially filled with segments of colored water, stacked on top of one another. There are **N distinct colors**, with exactly **C units of each color** At least **2 bottles start empty**, providing the necessary room to maneuver.
-
-A **move** consists of pouring the top color segment from one bottle into another. That is only valid if:
-- the destination bottle is not full;
-- the top of the destination bottle is either empty or matches the color being poured.
-
-When pouring, **all contiguous units of the same color at the top** of the bottle are moved together as a singles segment, until it has no more space in the destination bottle or the color of the water in the source changes.
-
-The puzzle is **solved** when every non-empty bottle contains exactly one color filling it completely.
-
 A set of **T bottles**, each with a **capacity of C units**, are initially filled with colored water.
 There are **N distinct colors**, with exactly **C units of each color** distributed across the bottles. At least 2 bottles are initially empty.
 
@@ -99,3 +89,10 @@ Operations
 | Name | Preconditions                                              | Effect                                                   | Cost |
 | ---- | ---------------------------------------------------------- | -------------------------------------------------------- | ---- |
 | Pour | i≠j ∧ i not empty ∧ j not full ∧ (j empty ∨ top(i)=top(j)) | pours until to j until (i empty ∧ j full ∧ top(i)≠top(j) | 1    |
+
+**Heuristic functions:**
+
+- **h1**: Number of non-empty bottles that are not already solved.
+- **h2**: Number of water segments in bottles that differ from bottle's top color
+- **h3**: Mixture penalty plus incompleteness penalty, where mixture penalty is the number of color segments in all bottles, and incompleteness penalty is the number of bottles that are not empty or full with one color.
+- **h4**: Number of color transitions (groups) inside each bottle. Counts groups of consecutive equal colors.
