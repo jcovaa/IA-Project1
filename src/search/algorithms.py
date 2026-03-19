@@ -193,3 +193,21 @@ def heuristic3(state):
             score += 1
 
     return score
+
+def heuristic4(state):
+    score = 0
+    for bottle in state.bottles:
+        if not bottle:
+            continue
+        if len(set(bottle)) == 1 and len(bottle) == state.capacity:
+            continue
+
+        groups = 1
+        for k in range(1, len(bottle)):
+            if bottle[k] != bottle[k - 1]:
+                groups += 1
+        score += groups - 1
+    
+    return score
+    
+            
