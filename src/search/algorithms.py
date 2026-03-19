@@ -55,30 +55,22 @@ def depth_first_search(initial_state, goal_state_func, operators_func):
    return None
 
 def depth_limited_search(initial_state, goal_state_func, operators_func, depth_limit):
-   root = TreeNode(initial_state)
-   # Each element in the stack is a tuple: (node, depth)
-   stack = [(root, 0)]
-   visited = set() # supostamente bloqueia caminhos validos
+    root = TreeNode(initial_state)
+    stack = [(root, 0)]
 
-   while stack:
-      node, depth = stack.pop()
+    while stack:
+        node, depth = stack.pop()
 
-      if (node.state in visited):
-         continue
+        if goal_state_func(node.state):
+            return node
 
-      visited.add(node.state)
+        if depth < depth_limit:
+            for state, _ in operators_func(node.state):
+                state_node = TreeNode(state)
+                node.add_child(state_node)
+                stack.append((state_node, depth + 1))
 
-      if goal_state_func(node.state):
-         return node
-
-      # Only expand if current depth < limit
-      if depth < depth_limit:
-           for state, _ in operators_func(node.state):
-              state_node = TreeNode(state)
-              node.add_child(state_node)
-              stack.append((state_node, depth + 1))
-
-   return None
+    return None
 
 def iterative_deepening_search(initial_state, goal_state_func, operators_func, depth_limit):
    for depth in range(depth_limit):
