@@ -1,6 +1,6 @@
 # File containing all the search algorithms for the game
 from collections import deque
-from search.node import TreeNode
+from .node import TreeNode
 
 def breadth_first_search(initial_state, goal_state_func, operators_func):
    root = TreeNode(initial_state)   # create the root node in the search tree
