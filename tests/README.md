@@ -5,6 +5,7 @@
 ### Run all tests
 
 ```bash
+# In tests directory
 python3 -m unittest
 ```
 
