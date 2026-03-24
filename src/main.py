@@ -1,5 +1,6 @@
-from game.gameState import GameState, pour, game_states, goal_state
-from search.algorithms import breadth_first_search, depth_first_search, depth_limited_search, iterative_deepening_search, greedy_search, a_star_search, heuristic3
+from .game.gameState import GameState, pour, game_states, goal_state
+from .search.algorithms import breadth_first_search, depth_first_search, depth_limited_search, iterative_deepening_search, greedy_search, a_star_search, heuristic3
+import random
 
 def print_solution(node):
     path = []
@@ -10,54 +11,35 @@ def print_solution(node):
 
     for state in reversed(path):
         print(state)
-        
-def main():
+
+def rand_bottles(num_bottles,capacity):
+    bottles = [[] for _ in range(num_bottles)]
+
+    colors = []
+    
+    for color in range(1, num_bottles - 1):
+        colors.extend([color] * capacity)
+    random.shuffle(colors)
+
+    idx = 0
+    for i in range(num_bottles - 2):
+        for j in range(capacity):
+            bottles[i].append(colors[idx])
+            idx += 1
+
+    return bottles
+
+def solve(func, bottles, capacity):
 	# Example starting bottles (each list: bottom -> top)
-	bottles = [
-		[1, 2, 1, 3],
-		[2, 2, 1, 1],
-		[3, 3, 2, 3],
-		[],
-		[]
-	]
-	capacity = 4
 
 	s = GameState(bottles, capacity)
-	print("Initial state:")
-	print(s)
 
-	print()
+	goal = func(s, goal_state, game_states)
+	return goal.state
 
-	goal_bfs = breadth_first_search(s, goal_state, game_states)
-	print("BFS solution")
-	#print_solution(goal_bfs)
-	print(goal_bfs.state)
+#def calc_time
 
-	goal_dfs = depth_first_search(s, goal_state, game_states)
-	print("DFS solution")
-	#print_solution(goal_dfs)
-	print(goal_dfs.state)
-
-	goal_dls = depth_limited_search(s, goal_state, game_states, depth_limit=10)
-	print("DLS solution")
-	#print_solution(goal_dls)
-	print(goal_dls.state)
-
-	goal_ids = iterative_deepening_search(s, goal_state, game_states, depth_limit=10)
-	print("IDS solution")
-	#print_solution(goal_ids)
-	print(goal_ids.state)
-
-	goal_greedy = greedy_search(s, goal_state, game_states, heuristic3)
-	print("Greedy solution")
-	#print_solution(goal_greedy)
-	print(goal_greedy.state)
-
-	goal_astar = a_star_search(s, goal_state, game_states, heuristic3)
-	print("A* solution")
-	#print_solution(goal_astar)
-	print(goal_astar.state)
 
 
 if __name__ == "__main__":
-    main()
+    solve()
