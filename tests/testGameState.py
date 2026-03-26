@@ -8,11 +8,17 @@ class TestGameState(unittest.TestCase):
       self.bottles = [[1, 2, 1, 3], [2, 2, 1, 1], [3, 3, 2, 3], [], []]
       self.capacity = 4
       self.state = GameState(self.bottles, self.capacity)
+      self.color_map = {1: 'red', 2: 'blue', 3: 'green'}
 
    # Test class initialization and attributes
    def test_init(self):
       self.assertEqual(self.state.bottles, self.bottles)
       self.assertEqual(self.state.capacity, self.capacity)
+
+   def test_convert_color_names(self):
+      state_with_colors = GameState(self.bottles, self.capacity, color_map=self.color_map)
+      converted = state_with_colors.convert_color_names(self.bottles[0])
+      self.assertEqual(converted, ['red', 'blue', 'red', 'green'])
    
    def test_equality(self):
       state1 = GameState([[1, 2], [2, 1], [], []], 3)

@@ -12,10 +12,14 @@ capacity = 3
 '''
 
 class GameState:
-   def __init__(self, bottles, capacity):
+   def __init__(self, bottles, capacity, color_map=None):
       # hashable tuple for storing bottles in a set
       self.bottles = [list(b) for b in bottles]
       self.capacity = capacity
+      self.color_map = color_map or {}
+
+   def convert_color_names(self, bottle):
+      return [self.color_map.get(c, str(c)) for c in bottle]
 
    '''Needed for the visited list'''
    def __eq__(self, other):
