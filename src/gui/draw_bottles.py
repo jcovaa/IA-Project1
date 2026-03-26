@@ -14,7 +14,7 @@ def generate_colors(n):
     return colors
 
 # AI function
-def draw_bottles(screen, bottles, capacity, x_start=100, y_start=100, bottle_width=60, bottle_height=200, spacing=40):
+def draw_bottles(screen, bottles, capacity, x_start, y_start, bottle_width, bottle_height, spacing):
 
     colors = generate_colors(len(bottles) -2)
     for i, bottle in enumerate(bottles):
@@ -27,7 +27,7 @@ def draw_bottles(screen, bottles, capacity, x_start=100, y_start=100, bottle_wid
         pygame.draw.line(screen, (200, 200, 200), (x + bottle_width, y), (x + bottle_width, y + bottle_height), 3)
         pygame.draw.line(screen, (200, 200, 200), (x, y + bottle_height), (x + bottle_width, y + bottle_height), 3) 
 
-        for j, color_id in enumerate(reversed(bottle)):
+        for j, color_id in enumerate(bottle):
             if color_id == 0:
                 continue
             block_height = bottle_height // capacity

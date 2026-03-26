@@ -148,8 +148,80 @@ def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func
 
    return None
 
+#not tested
+def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuristic_func, weight):
+    root = TreeNode(initial_state)
+    queue = [(root, heuristic_func(root.state) * weight)]
 
-# fazer heuristicas
+    visited = set()
+
+    while queue:
+        
+        (node, _) = queue.pop(0)
+
+        if goal_state_func(node.state):
+            return node
+
+        if node.state in visited:
+            continue
+
+        visited.add(node.state)
+
+        for state, step_cost in operators_func(node.state):
+            
+            tree = TreeNode(state, node)
+
+            node.add_child(tree)
+            
+            tree.cost = node.cost + step_cost
+
+            cost = tree.cost + weight * heuristic_func(state)
+
+            queue.append((tree, cost))
+
+        queue = sorted(queue, key=lambda x: x[1])
+
+    return None
+
+# not tested
+def bidirectional_search(initial_state, goal_state, operators_func):
+   if initial_state == goal_state:
+      return TreeNode(initial_state)
+
+   front_queue = deque([TreeNode(initial_state)])
+   back_queue = deque([TreeNode(goal_state)])
+
+   front_visited = {TreeNode(initial_state)}
+   back_visited = {TreeNode(goal_state)}
+
+   while front_queue and back_queue:
+      
+      node = front_queue.popleft()
+
+      for state, _ in operators_func(node.state):
+         if state not in front_visited:
+               tree = TreeNode(state)
+               node.add_child(tree)
+               front_visited.add(tree)
+               front_queue.append(tree)
+
+         if state in back_visited:
+               return front_visited[state] 
+
+      node = back_queue.popleft()
+
+      for state, _ in operators_func(node.state):
+         if state not in back_visited:
+               tree = TreeNode(state)
+               node.add_child(tree)
+               back_visited[state] = tree
+               back_queue.append(tree)
+
+         if state in front_visited:
+               return front_visited[state] 
+
+   return None
+
 
 def heuristic1(state):
     score = 0
@@ -201,5 +273,3 @@ def heuristic4(state):
         score += groups - 1
     
     return score
-    
-            

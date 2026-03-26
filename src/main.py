@@ -1,5 +1,4 @@
-from .game.gameState import GameState, pour, game_states, goal_state
-from .search.algorithms import breadth_first_search, depth_first_search, depth_limited_search, iterative_deepening_search, greedy_search, a_star_search, heuristic3
+from .game.gameState import game_states, goal_state
 import random
 
 def print_solution(node):
@@ -29,12 +28,10 @@ def rand_bottles(num_bottles,capacity):
 
     return bottles
 
-def solve(func, bottles, capacity):
-	# Example starting bottles (each list: bottom -> top)
+def solve(func, state):
 
-	s = GameState(bottles, capacity)
-
-	goal = func(s, goal_state, game_states)
+	goal = func(state, goal_state, game_states) # temos q adaptar para cada tipo de funçao pq ha funçoes que exigem mais coisas
+    
 	return goal.state
 
 #def calc_time
