@@ -1,5 +1,5 @@
 import random
-from game.gameState import GameState
+from src.game.gameState import GameState
 
 DIFICULTY_CONFIGS = {
    "easy": {"bottles": 3, "capacity": 3, "colors": 3, "empty": 2},
@@ -8,7 +8,7 @@ DIFICULTY_CONFIGS = {
 }
 
 COLOR_NAMES = [
-   "red", "blue", "green", "orange", "yellow", "purple", "brown", "white", "pink", "cyan"
+   "red", "green", "blue", "orange", "yellow", "purple", "brown", "white", "pink", "cyan"
 ]
 
 def generate_puzzle(difficulty="easy", seed=None):
@@ -28,4 +28,6 @@ def generate_puzzle(difficulty="easy", seed=None):
    empty_bottles = [[] for _ in range(empty_bottles)]
    all_bottles = filled + empty_bottles
 
-   return GameState(all_bottles, capacity)
+   color_map = {i + 1: COLOR_NAMES[i] for i in range(colors)}
+
+   return GameState(all_bottles, capacity, color_map=color_map)

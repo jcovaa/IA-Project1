@@ -1,24 +1,34 @@
 import pygame
 from src.main import rand_bottles, solve
+from .components import Button, DifficultySelector
 from .draw_bottles import draw_bottles
 from src.game.gameState import GameState, pour
 import time
+from src.puzzle_generator import generate_puzzle
+
+SCREEN_W, SCREEN_H = 1280, 720
+PANEL_W = 200
+
+def draw_panel(screen, panel_x):
+    pygame.draw.rect(screen, (40, 40, 40), (panel_x, 0, PANEL_W, SCREEN_H))
+    pygame.draw.line(screen, (80, 80, 80), (panel_x, 0), (panel_x, SCREEN_H), 2)
 
 def main():
 
     # pygame setup
     pygame.init()
-    screen = pygame.display.set_mode((1280, 720)) # provsorio
+    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H)) # provsorio
+    pygame.display.set_caption("Water Sort Puzzle")
     clock = pygame.time.Clock()
-    running = True
+
+    panel_x = SCREEN_W - PANEL_W
+    selector = DifficultySelector(x=panel_x + 20, y=20)
+    btn_generate = Button(x=panel_x + 20, y=225, width=160, heigth=45, text="Generate", color=(50, 100, 180), hover_color=(70, 130, 210))
 
     #Score
     start_time = time.time()
     steps_count = 0
     font = pygame.font.SysFont(None, 36)
-
-
-
 
     #valores provisorios
     x_start = 100
@@ -29,15 +39,13 @@ def main():
 
     #game setup
     # provisorio 
-    # #gerar diferentes dificuldades -> dar opçoes -> func para gerar que faça sentido
-    bottles = rand_bottles(5,4) 
-    capacity = 4
-
-    state = GameState(bottles, capacity)
-
+    current_difficulty = "easy"
+    game_state = generate_puzzle(current_difficulty, seed=42)
     #solve # dar opçoes
 
-    animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
+    running = True
+
+    #animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
     #animation_data = None
 
     #Meter todas as checkboxs aqui pre defenidas e cria las abaixo
@@ -48,30 +56,40 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False        
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN: # se calhar mudar a mecanica para selecionar a garrafa e so aceitar quando acertar e se quero desistir de usar essa garrafa, clicar na mesma + ter algumacoisa a mostrar isso
                 mouse_x, mouse_y = pygame.mouse.get_pos()
-                for i in range(len(state.bottles)):
+                for i in range(len(game_state.bottles)):
                     x = x_start + i * (bottle_width + spacing)
                     y = y_start
                     if x <= mouse_x <= x + bottle_width and y <= mouse_y <= y + bottle_height:
                         if selected_bottle is None:
                             selected_bottle = i  
                         else:
-                            result  = pour(state, selected_bottle, i) 
+                            result  = pour(game_state, selected_bottle, i) 
                             if result is not None:
-                                state, _ = result
+                                game_state, _ = result
                                 steps_count += 1
                             selected_bottle = None  
                         break
             
 
+            selector.handle_click(event)
+
+            if btn_generate.is_clicked(event):
+                current_difficulty = selector.selected
+                game_state = generate_puzzle(current_difficulty)
+                start_time = time.time()
+                steps_count = 0
+
         # if animating:
             #fazer animaçoes
 
-       
-
         screen.fill((30, 30, 30)) #?
-        draw_bottles(screen, state.bottles, state.capacity, x_start, y_start, bottle_width, bottle_height, spacing)
+        draw_bottles(screen, game_state, x_start, y_start, bottle_width, bottle_height, spacing, difficulty=current_difficulty)
+
+        draw_panel(screen, panel_x)
+        selector.draw(screen)
+        btn_generate.draw(screen)
 
         elapsed_time = int(time.time() - start_time)
         text = f"Time: {elapsed_time}s   Steps: {steps_count}"
