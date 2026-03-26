@@ -48,6 +48,7 @@ class TestAlgorithms(unittest.TestCase):
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
 
+   #not implemented yet
    def test_bidirectional_search(self):
       result = alg.bidirectional_search(self.initial_state, self.goal_state, self.operators_func)
       self.assertIsNotNone(result)
