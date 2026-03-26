@@ -1,4 +1,4 @@
-from game.gameState import GameState
+from src.game.gameState import GameState
 
 def save_puzzle(game_state, filename):
    with open(filename, 'w') as f:

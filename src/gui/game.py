@@ -1,6 +1,7 @@
 import pygame
 from src.main import rand_bottles, solve
 from .draw_bottles import draw_bottles
+from src.puzzle_generator import generate_puzzle
 def main():
 
     # pygame setup
@@ -11,9 +12,7 @@ def main():
 
     #game setup
     # provisorio 
-    # #gerar diferentes dificuldades -> dar opçoes -> func para gerar que faça sentido
-    bottles = rand_bottles(5,4) 
-    capacity = 4
+    game_state = generate_puzzle("easy", seed=42)
     #solve # dar opçoes
 
     animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
@@ -32,7 +31,7 @@ def main():
             #fazer animaçoes
             
         screen.fill((30, 30, 30)) 
-        draw_bottles(screen, bottles, capacity)
+        draw_bottles(screen, game_state)
 
         pygame.display.flip()
 
