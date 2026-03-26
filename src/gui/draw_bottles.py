@@ -13,22 +13,32 @@ COLOR_RGB = {
     "cyan": (50, 200, 210)
 }
 
-def draw_bottles(screen, game_state, x_start=100, y_start=100, bottle_width=60, bottle_heigth=200, spacing=40):
-   bottles = game_state.bottles
-   capacity = game_state.capacity
+def draw_bottles(screen, game_state, x_start=100, y_start=100, bottle_width=60, bottle_heigth=200, spacing=40, difficulty=None, row_spacing=80):
+    bottles = game_state.bottles
+    capacity = game_state.capacity
+    total_bottles = len(bottles)
 
-   for i, bottle in enumerate(bottles):
-      x = x_start + i * (bottle_width + spacing)
-      y = y_start
+    two_rows_layout = difficulty == "hard" and total_bottles > 1
+    bottles_per_row = (total_bottles + 1) // 2 if two_rows_layout else total_bottles
 
-      pygame.draw.ellipse(screen, (200, 200, 200), (x, y-10, bottle_width, 20), 3)
-      pygame.draw.line(screen, (200, 200, 200), (x, y), (x, y + bottle_heigth), 3)
-      pygame.draw.line(screen, (200, 200, 200), (x + bottle_width, y), (x + bottle_width, y + bottle_heigth), 3)
-      pygame.draw.line(screen, (200, 200, 200), (x, y + bottle_heigth), (x + bottle_width, y + bottle_heigth), 3) 
+    for i, bottle in enumerate(bottles):
+        if two_rows_layout:
+            row = 0 if i < bottles_per_row else 1
+            col = i if row == 0 else i - bottles_per_row
+            x = x_start + col * (bottle_width + spacing)
+            y = y_start + row * (bottle_heigth + row_spacing)
+        else:
+            x = x_start + i * (bottle_width + spacing)
+            y = y_start
 
-      for j, color_id in enumerate(reversed(bottle)):
-        color_name = game_state.color_map.get(color_id)
-        rgb = COLOR_RGB.get(color_name, (120, 120, 120))
-        block_height = bottle_heigth // capacity
-        block_y = y + bottle_heigth - (j + 1) * block_height
-        pygame.draw.rect(screen, rgb, (x+3, block_y+3, bottle_width-6, block_height-6))
+        pygame.draw.ellipse(screen, (200, 200, 200), (x, y-10, bottle_width, 20), 3)
+        pygame.draw.line(screen, (200, 200, 200), (x, y), (x, y + bottle_heigth), 3)
+        pygame.draw.line(screen, (200, 200, 200), (x + bottle_width, y), (x + bottle_width, y + bottle_heigth), 3)
+        pygame.draw.line(screen, (200, 200, 200), (x, y + bottle_heigth), (x + bottle_width, y + bottle_heigth), 3)
+
+        for j, color_id in enumerate(reversed(bottle)):
+            color_name = game_state.color_map.get(color_id)
+            rgb = COLOR_RGB.get(color_name, (120, 120, 120))
+            block_height = bottle_heigth // capacity
+            block_y = y + bottle_heigth - (j + 1) * block_height
+            pygame.draw.rect(screen, rgb, (x+3, block_y+3, bottle_width-6, block_height-6))
