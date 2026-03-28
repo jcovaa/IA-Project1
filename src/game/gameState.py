@@ -77,7 +77,6 @@ def pour(game_state, bottle1, bottle2):
 
    return GameState(new_bottles, game_state.capacity, game_state.color_map), 1
 
-
 def game_states(game_state):
    new_states = []
    for i in range(len(game_state.bottles)):

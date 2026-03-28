@@ -15,6 +15,10 @@ from src.search.algorithms import (
     a_star_search,
     weighted_a_star_search,
     bidirectional_search,
+    heuristic1,
+    heuristic2,
+    heuristic3,
+    heuristic4
 )
 
 
@@ -28,7 +32,21 @@ def draw_panel(screen, panel_x):
 algorithms_map = {
     "BFS": breadth_first_search,
     "DFS": depth_first_search, 
+    "DLS": depth_limited_search,
+    "IDS": iterative_deepening_search,
+    "Greedy": greedy_search,
+    "A*": a_star_search,
+    "Weighted A*": weighted_a_star_search,
+    "Bidirectional": bidirectional_search
 } # atualizar
+
+#melhorar nomes
+heuristics_map = {
+    "Heuristic 1": heuristic1,
+    "Heuristic 2": heuristic2,
+    "Heuristic 3": heuristic3,
+    "Heuristic 4": heuristic4
+} 
 
 def main():
 
@@ -36,17 +54,19 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H)) # provsorio
     pygame.display.set_caption("Water Sort Puzzle")
-    clock = pygame.time.Clock()
+    clock = pygame.time.Clock() # contar o timer bem
 
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
     btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo
     
     algorithms = list(algorithms_map.keys())
+    hueristics = list(heuristics_map.keys())
 
     algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
+    heuristics_dropdown = Dropdown(panel_x + 20, 370, 160, 45, hueristics)
     #heuristcis_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms, text="Solve with")
-    solve_button = Button(x=panel_x + 20, y=400, width=160, height=45, text="Solve", color=(180, 50, 50), hover_color=(210, 70, 70))
+    solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(180, 50, 50), hover_color=(210, 70, 70))
 
     #Score
     start_time = time.time()
@@ -75,6 +95,8 @@ def main():
     solving = False
     current_move = 0
     last_move_time = 0
+    algorithm = None
+    heuristic = None
 
     #animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
     #animation_data = None
@@ -124,11 +146,32 @@ def main():
                 selected_bottle = None
 
             algorithms_dropdown.handle_click(event)
+            algorithm = algorithms_dropdown.selected 
+            
+
+            if algorithm in ["A*", "Greedy", "Weighted A*"]:
+                heuristics_dropdown.handle_click(event)
 
             if solve_button.is_clicked(event):
                 algorithm = algorithms_dropdown.selected
                 func = algorithms_map[algorithm]
-                sol = solve(func, game_state)
+
+                heuristic = heuristics_dropdown.selected
+                heuristic_func = heuristics_map.get(heuristic)
+
+                if algorithm == "A*" or algorithm == "Greedy":
+                    sol = solve(func, game_state, heuristic_func)
+                elif algorithm == "WeightedA*":
+                    sol = solve(func, game_state, heuristic_func, weight=2) #por enquanto valor default
+                elif algorithm == "DLS" or algorithm == "IDS":
+                    sol = solve(func, game_state, depth_limit=10) #por enquanto valor default
+                else:
+                    sol = solve(func, game_state)
+
+                """elif algorithm == "Bidirectional":
+                    #temos q fazer uma func nova
+                else: """
+
                 solution_path = solution(sol) 
                 solving = True
                
@@ -146,6 +189,9 @@ def main():
         btn_generate.draw(screen)
         algorithms_dropdown.draw(screen)
         solve_button.draw(screen)
+
+        if algorithm in ["A*", "Greedy", "Weighted A*"]:
+            heuristics_dropdown.draw(screen)
 
         elapsed_time = int(time.time() - start_time)
         text = f"Time: {elapsed_time}s   Steps: {steps_count}"

@@ -27,9 +27,9 @@ def rand_bottles(num_bottles,capacity):
 
     return bottles
 
-def solve(func, state):
+def solve(func, state, *args, **kwargs):
 
-	goal = func(state, goal_state, game_states) # temos q adaptar para cada tipo de funçao pq ha funçoes que exigem mais coisas
+	goal = func(state, goal_state, game_states,  *args, **kwargs) 
     
 	return goal
 
