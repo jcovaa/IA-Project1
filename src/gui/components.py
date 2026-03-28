@@ -86,3 +86,44 @@ class Bottle:
          if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
                return True
       return False
+   
+class Dropdown:
+   def __init__(self, x, y, width, height, options, selected_index=0):
+      self.rect = pygame.Rect(x, y, width, height)
+      self.options = options
+      self.selected_index = selected_index
+      self.open = False
+      self.font = pygame.font.SysFont("Arial", 18)
+
+   def draw(self, screen):
+      pygame.draw.rect(screen, (60, 60, 60), self.rect)
+      pygame.draw.rect(screen, (150, 150, 150), self.rect, 2)
+      label = self.font.render(self.options[self.selected_index], True, (255, 255, 255))
+      screen.blit(label, label.get_rect(center=self.rect.center))
+
+      if self.open:
+         for i, option in enumerate(self.options):
+               option_rect = pygame.Rect(self.rect.x, self.rect.y + (i+1)*self.rect.height, self.rect.width, self.rect.height)
+               pygame.draw.rect(screen, (80, 80, 80), option_rect)
+               pygame.draw.rect(screen, (150, 150, 150), option_rect, 2)
+               label = self.font.render(option, True, (255, 255, 255))
+               screen.blit(label, label.get_rect(center=option_rect.center))
+
+   def handle_click(self, event):
+      if event.type == pygame.MOUSEBUTTONDOWN:
+         if self.rect.collidepoint(event.pos):
+               self.open = not self.open
+               return True
+         if self.open:
+               for i, option in enumerate(self.options):
+                  option_rect = pygame.Rect(self.rect.x, self.rect.y + (i+1)*self.rect.height, self.rect.width, self.rect.height)
+                  if option_rect.collidepoint(event.pos):
+                     self.selected_index = i
+                     self.open = False
+                     return True
+               self.open = False
+      return False
+
+   @property
+   def selected(self):
+      return self.options[self.selected_index]

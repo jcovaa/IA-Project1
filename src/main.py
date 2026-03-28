@@ -1,15 +1,14 @@
 from .game.gameState import game_states, goal_state
 import random
 
-def print_solution(node):
+def solution(node):
     path = []
     current = node
     while current:
         path.append(current.state)
         current = current.parent
 
-    for state in reversed(path):
-        print(state)
+    return list(reversed(path))
 
 def rand_bottles(num_bottles,capacity):
     bottles = [[] for _ in range(num_bottles)]
@@ -32,7 +31,7 @@ def solve(func, state):
 
 	goal = func(state, goal_state, game_states) # temos q adaptar para cada tipo de funçao pq ha funçoes que exigem mais coisas
     
-	return goal.state
+	return goal
 
 #def calc_time
 
