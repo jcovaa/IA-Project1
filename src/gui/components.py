@@ -2,8 +2,8 @@ import pygame
 
 class Button:
 
-   def __init__(self, x, y, width, heigth, text, color=(70, 70, 70), hover_color=(100, 100, 100)):
-      self.rect = pygame.Rect(x, y, width, heigth)
+   def __init__(self, x, y, width, height, text, color=(70, 70, 70), hover_color=(100, 100, 100)):
+      self.rect = pygame.Rect(x, y, width, height)
       self.text = text
       self.color = color
       self.hover_color = hover_color
@@ -52,3 +52,37 @@ class DifficultySelector:
          for opt, rect in self.buttons.items():
             if rect.collidepoint(event.pos):
                self.selected = opt
+
+class Bottle:
+   def __init__(self, bottle, x, y, width, height, capacity, index):
+      self.bottle = bottle
+      self.x = x  
+      self.y = y
+      self.width = width
+      self.height = height
+      self.capacity = capacity
+      self.index = index
+
+   def draw(self, screen, game_state, COLOR_RGB, selected=False):
+
+      y_offset = -20 if selected else 0
+      y = self.y + y_offset
+   
+      pygame.draw.ellipse(screen, (200, 200, 200), (self.x, y-10, self.width, 20), 3)
+      pygame.draw.line(screen, (200, 200, 200), (self.x, y), (self.x, y + self.height), 3)
+      pygame.draw.line(screen, (200, 200, 200), (self.x + self.width, y), (self.x + self.width, y + self.height), 3)
+      pygame.draw.line(screen, (200, 200, 200), (self.x, y + self.height), (self.x + self.width, y + self.height), 3)
+
+      for j, color_id in enumerate(self.bottle):
+         color_name = game_state.color_map.get(color_id)
+         rgb = COLOR_RGB.get(color_name, (120, 120, 120))
+         block_height = self.height // self.capacity
+         block_y = y + self.height - (j + 1) * block_height
+         pygame.draw.rect(screen, rgb, (self.x+3, block_y+3, self.width-6, block_height-6))
+
+   def handle_click(self, event):      
+      if event.type == pygame.MOUSEBUTTONDOWN:
+         mx, my = event.pos
+         if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
+               return True
+      return False

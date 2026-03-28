@@ -1,7 +1,7 @@
 import pygame
 from src.main import rand_bottles, solve
 from .components import Button, DifficultySelector
-from .draw_bottles import draw_bottles
+from .bottles import draw_bottles, get_bottles
 from src.game.gameState import GameState, pour
 import time
 from src.puzzle_generator import generate_puzzle
@@ -23,7 +23,7 @@ def main():
 
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
-    btn_generate = Button(x=panel_x + 20, y=225, width=160, heigth=45, text="Generate", color=(50, 100, 180), hover_color=(70, 130, 210))
+    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate", color=(50, 100, 180), hover_color=(70, 130, 210))
 
     #Score
     start_time = time.time()
@@ -38,54 +38,57 @@ def main():
     spacing = 40
 
     #game setup
-    # provisorio 
+    #provisorio 
     current_difficulty = "easy"
     game_state = generate_puzzle(current_difficulty, seed=42)
     #solve # dar opçoes
 
     running = True
+    selected_bottle = None
+    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
 
     #animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
     #animation_data = None
 
     #Meter todas as checkboxs aqui pre defenidas e cria las abaixo
 
-    selected_bottle = None
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False        
-            if event.type == pygame.MOUSEBUTTONDOWN: # se calhar mudar a mecanica para selecionar a garrafa e so aceitar quando acertar e se quero desistir de usar essa garrafa, clicar na mesma + ter algumacoisa a mostrar isso
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-                for i in range(len(game_state.bottles)):
-                    x = x_start + i * (bottle_width + spacing)
-                    y = y_start
-                    if x <= mouse_x <= x + bottle_width and y <= mouse_y <= y + bottle_height:
+                running = False      
+
+            if event.type == pygame.MOUSEBUTTONDOWN: # se calhar mudar a mecanica para selecionar a garrafa e so aceitar quando acertar e se quero desistir de usar essa garrafa, clicar na mesma + ter algumacoisa a mostrar isso                
+                for bottle in bottles:
+                    if bottle.handle_click(event):         # usa o método da classe
                         if selected_bottle is None:
-                            selected_bottle = i  
+                            selected_bottle = bottle.index
+                        elif selected_bottle == bottle.index:
+                            selected_bottle = None 
                         else:
-                            result  = pour(game_state, selected_bottle, i) 
+                            result = pour(game_state, selected_bottle, bottle.index)
                             if result is not None:
                                 game_state, _ = result
                                 steps_count += 1
-                            selected_bottle = None  
+                                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                            selected_bottle = None
                         break
-            
 
             selector.handle_click(event)
 
             if btn_generate.is_clicked(event):
                 current_difficulty = selector.selected
                 game_state = generate_puzzle(current_difficulty)
+                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                 start_time = time.time()
                 steps_count = 0
+                selected_bottle = None
 
         # if animating:
             #fazer animaçoes
 
         screen.fill((30, 30, 30)) #?
-        draw_bottles(screen, game_state, x_start, y_start, bottle_width, bottle_height, spacing, difficulty=current_difficulty)
+        draw_bottles(screen, game_state, bottles, selected_bottle)
 
         draw_panel(screen, panel_x)
         selector.draw(screen)
