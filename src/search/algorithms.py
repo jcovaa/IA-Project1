@@ -80,6 +80,33 @@ def iterative_deepening_search(initial_state, goal_state_func, operators_func, d
 
    return None
 
+def uniform_cost_search(initial_state, goal_state_func, operators_func):
+    root = TreeNode(initial_state)
+    queue = [(root, 0)]
+
+    visited = set()
+
+    while queue:
+        node, cost = queue.pop(0)
+
+        if node.state in visited:
+            continue
+
+        if goal_state_func(node.state):
+            return node
+        
+        visited.add(node.state)
+        
+        for state, step_cost in operators_func(node.state):
+            state_node = TreeNode(state)
+            node.add_child(state_node)
+            total_cost = cost + step_cost
+            queue.append((state_node, total_cost))
+        
+        queue.sort(key=lambda x: x[1])
+
+    return None
+
 def greedy_search(initial_state, goal_state_func, operators_func, heuristic_func):
    root = TreeNode(initial_state)   # create the root node in the search tree
    queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
