@@ -1,5 +1,5 @@
 import pygame
-from src.main import solution, rand_bottles, solve
+from src.main import solution, solve
 from .components import Button, DifficultySelector, Dropdown
 from .bottles import draw_bottles, get_bottles
 from src.game.gameState import pour
@@ -65,7 +65,6 @@ def main():
 
     algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
     heuristics_dropdown = Dropdown(panel_x + 20, 370, 160, 45, hueristics)
-    #heuristcis_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms, text="Solve with")
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(180, 50, 50), hover_color=(210, 70, 70))
 
     #Score
@@ -119,7 +118,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False      
 
-            if event.type == pygame.MOUSEBUTTONDOWN: # se calhar mudar a mecanica para selecionar a garrafa e so aceitar quando acertar e se quero desistir de usar essa garrafa, clicar na mesma + ter algumacoisa a mostrar isso                
+            if event.type == pygame.MOUSEBUTTONDOWN and not solving: # se calhar mudar a mecanica para selecionar a garrafa e so aceitar quando acertar e se quero desistir de usar essa garrafa, clicar na mesma + ter algumacoisa a mostrar isso                
                 for bottle in bottles:
                     if bottle.handle_click(event):         # usa o método da classe
                         if selected_bottle is None:
@@ -174,9 +173,6 @@ def main():
 
                 solution_path = solution(sol) 
                 solving = True
-               
-
-
 
         # if animating:
             #fazer animaçoes
