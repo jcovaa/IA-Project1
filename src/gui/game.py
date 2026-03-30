@@ -1,8 +1,7 @@
 import pygame
-from src.main import solution, solve
 from .components import Button, DifficultySelector, Dropdown
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour
+from src.game.gameState import pour, solve, solution
 import time
 from src.puzzle_generator import generate_puzzle
 
@@ -20,7 +19,6 @@ from src.search.algorithms import (
     heuristic3,
     heuristic4
 )
-
 
 SCREEN_W, SCREEN_H = 1280, 720
 PANEL_W = 200
@@ -48,7 +46,7 @@ heuristics_map = {
     "Heuristic 4": heuristic4
 } 
 
-def main():
+def init_game():
 
     # pygame setup
     pygame.init()
@@ -199,6 +197,3 @@ def main():
         clock.tick(60)  # limits FPS to 60
 
     pygame.quit()
-
-if __name__ == "__main__":
-    main()

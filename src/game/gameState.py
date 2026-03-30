@@ -101,3 +101,18 @@ def goal_state(game_state):
       if len(set(bottle)) != 1:
          return False
    return True
+
+def solution(node):
+    path = []
+    current = node
+    while current:
+        path.append(current.state)
+        current = current.parent
+
+    return list(reversed(path))
+
+def solve(func, state, *args, **kwargs):
+
+	goal = func(state, goal_state, game_states,  *args, **kwargs) 
+    
+	return goal
