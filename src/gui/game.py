@@ -1,8 +1,7 @@
 import pygame
-from src.main import rand_bottles, solve
 from .components import Button, DifficultySelector
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import GameState, pour
+from src.game.gameState import pour
 import time
 from src.puzzle_generator import generate_puzzle
 
@@ -13,7 +12,7 @@ def draw_panel(screen, panel_x):
     pygame.draw.rect(screen, (40, 40, 40), (panel_x, 0, PANEL_W, SCREEN_H))
     pygame.draw.line(screen, (80, 80, 80), (panel_x, 0), (panel_x, SCREEN_H), 2)
 
-def main():
+def init_game():
 
     # pygame setup
     pygame.init()
@@ -104,6 +103,3 @@ def main():
         clock.tick(60)  # limits FPS to 60
 
     pygame.quit()
-
-if __name__ == "__main__":
-    main()
