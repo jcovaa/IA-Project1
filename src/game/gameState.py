@@ -75,7 +75,7 @@ def pour(game_state, bottle1, bottle2):
    for _ in range(units_to_pour):
       new_bottles[bottle2].append(new_bottles[bottle1].pop())
 
-   return GameState(new_bottles, game_state.capacity), 1
+   return GameState(new_bottles, game_state.capacity, game_state.color_map), 1
 
 
 def game_states(game_state):

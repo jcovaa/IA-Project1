@@ -1,0 +1,88 @@
+import pygame
+
+class Button:
+
+   def __init__(self, x, y, width, height, text, color=(70, 70, 70), hover_color=(100, 100, 100)):
+      self.rect = pygame.Rect(x, y, width, height)
+      self.text = text
+      self.color = color
+      self.hover_color = hover_color
+      self.font = pygame.font.SysFont("Arial", 18)
+
+   def draw(self, screen):
+      mouse = pygame.mouse.get_pos()
+      color = self.hover_color if self.rect.collidepoint(mouse) else self.color
+      pygame.draw.rect(screen, color, self.rect, border_radius=8)
+      pygame.draw.rect(screen, (200, 200, 200), self.rect, 2, border_radius=8)
+      label = self.font.render(self.text, True, (255, 255, 255))
+      screen.blit(label, label.get_rect(center=self.rect.center))
+
+   def is_clicked(self, event):
+      return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+   
+
+class DifficultySelector:
+
+   def __init__(self, x, y, width=160):
+      self.options = ["easy", "medium", "hard"]
+      self.selected = "easy"
+      self.font = pygame.font.SysFont("Arial", 18)
+      self.title_font = pygame.font.SysFont("Arial", 20, bold=True)
+      self.x, self.y = x, y
+      self.width = width
+      self.buttons = {
+         opt: pygame.Rect(x, y + 40 + i * 50, width, 38) for i, opt in enumerate(self.options)
+      }
+
+   def draw(self, screen):
+      title = self.title_font.render("Difficulty", True, (220, 220, 220))
+      screen.blit(title, (self.x, self.y))
+
+      for opt, rect in self.buttons.items():
+         is_selected = opt == self.selected
+         bg = (60, 120, 60) if is_selected else (60, 60, 60)
+         border = (100, 220, 100) if is_selected else (150, 150, 150)
+         pygame.draw.rect(screen, bg, rect, border_radius=8)
+         pygame.draw.rect(screen, border, rect, 2, border_radius=8)
+         label = self.font.render(opt.capitalize(), True, (255, 255, 255))
+         screen.blit(label, label.get_rect(center=rect.center))
+
+   def handle_click(self, event):
+      if event.type == pygame.MOUSEBUTTONDOWN:
+         for opt, rect in self.buttons.items():
+            if rect.collidepoint(event.pos):
+               self.selected = opt
+
+class Bottle:
+   def __init__(self, bottle, x, y, width, height, capacity, index):
+      self.bottle = bottle
+      self.x = x  
+      self.y = y
+      self.width = width
+      self.height = height
+      self.capacity = capacity
+      self.index = index
+
+   def draw(self, screen, game_state, COLOR_RGB, selected=False):
+
+      y_offset = -20 if selected else 0
+      y = self.y + y_offset
+   
+      pygame.draw.ellipse(screen, (200, 200, 200), (self.x, y-10, self.width, 20), 3)
+      pygame.draw.line(screen, (200, 200, 200), (self.x, y), (self.x, y + self.height), 3)
+      pygame.draw.line(screen, (200, 200, 200), (self.x + self.width, y), (self.x + self.width, y + self.height), 3)
+      pygame.draw.line(screen, (200, 200, 200), (self.x, y + self.height), (self.x + self.width, y + self.height), 3)
+
+      for j, color_id in enumerate(self.bottle):
+         color_name = game_state.color_map.get(color_id)
+         rgb = COLOR_RGB.get(color_name, (120, 120, 120))
+         block_height = self.height // self.capacity
+         block_y = y + self.height - (j + 1) * block_height
+         pygame.draw.rect(screen, rgb, (self.x+3, block_y+3, self.width-6, block_height-6))
+
+   def handle_click(self, event):      
+      if event.type == pygame.MOUSEBUTTONDOWN:
+         mx, my = event.pos
+         if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
+               return True
+      return False

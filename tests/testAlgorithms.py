@@ -42,3 +42,14 @@ class TestAlgorithms(unittest.TestCase):
       result = alg.a_star_search(self.initial_state, self.goal_state_func, self.operators_func, heuristic_func=lambda state: 0)
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
+
+   def test_weighted_a_star_search(self):
+      result = alg.weighted_a_star_search(self.initial_state, self.goal_state_func, self.operators_func, heuristic_func=lambda state: 0, weight=2)
+      self.assertIsNotNone(result)
+      self.assertEqual(result.state, self.goal_state)
+
+   #not implemented yet
+   def test_bidirectional_search(self):
+      result = alg.bidirectional_search(self.initial_state, self.goal_state, self.operators_func)
+      self.assertIsNotNone(result)
+      self.assertEqual(result.state, self.goal_state)
