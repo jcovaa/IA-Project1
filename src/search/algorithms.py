@@ -38,14 +38,13 @@ def depth_first_search(initial_state, goal_state_func, operators_func):
 
    while stack:
       node = stack.pop()
+      if goal_state_func(node.state):
+         return node
 
       if node.state in visited:
          continue
 
       visited.add(node.state)
-
-      if goal_state_func(node.state):
-         return node
 
       for state, _ in operators_func(node.state):
          state_node = TreeNode(state)
@@ -88,12 +87,11 @@ def uniform_cost_search(initial_state, goal_state_func, operators_func):
 
     while queue:
         node, cost = queue.pop(0)
+        if goal_state_func(node.state):
+            return node
 
         if node.state in visited:
             continue
-
-        if goal_state_func(node.state):
-            return node
         
         visited.add(node.state)
         
@@ -147,7 +145,6 @@ def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func
    while queue:
 
       (node, _) = queue.pop(0)
-
       if goal_state_func(node.state):   # check goal state
          return node
 
@@ -185,7 +182,6 @@ def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuri
     while queue:
         
         (node, _) = queue.pop(0)
-
         if goal_state_func(node.state):
             return node
 
