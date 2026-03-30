@@ -33,6 +33,11 @@ class TestAlgorithms(unittest.TestCase):
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
 
+   def test_uniform_cost_search(self):
+      result = alg.uniform_cost_search(self.initial_state, self.goal_state_func, self.operators_func)
+      self.assertIsNotNone(result)
+      self.assertEqual(result.state, self.goal_state)
+
    def test_greedy_best_first_search(self):
       result = alg.greedy_search(self.initial_state, self.goal_state_func, self.operators_func, heuristic_func=lambda state: 0)
       self.assertIsNotNone(result)
