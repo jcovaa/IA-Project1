@@ -1,4 +1,5 @@
-from .game.gameState import game_states, goal_state
+from game.gameState import GameState, game_states, goal_state
+from search.algorithms import breadth_first_search
 import random
 
 def print_solution(node):
@@ -28,15 +29,26 @@ def rand_bottles(num_bottles,capacity):
 
     return bottles
 
-def solve(func, state):
+def solve(func=None, state=None):
+    if func is None:
+        func = breadth_first_search
 
-	goal = func(state, goal_state, game_states) # temos q adaptar para cada tipo de funçao pq ha funçoes que exigem mais coisas
-    
-	return goal.state
+    if state is None:
+        state = GameState(rand_bottles(num_bottles=5, capacity=4), capacity=4)
+
+    goal = func(state, goal_state, game_states)
+    if goal is None:
+        return None
+
+    return goal.state
 
 #def calc_time
 
 
 
 if __name__ == "__main__":
-    solve()
+    solution = solve()
+    if solution is None:
+        print("No solution found.")
+    else:
+        print(solution)
