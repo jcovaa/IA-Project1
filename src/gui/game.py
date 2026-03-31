@@ -64,6 +64,8 @@ def init_game():
     algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
     heuristics_dropdown = Dropdown(panel_x + 20, 370, 160, 45, hueristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(180, 50, 50), hover_color=(210, 70, 70))
+    btn_next_move = Button(x=panel_x + 80, y=380, width=40, height=40, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
+    btm_prev_move = Button(x=panel_x + 20, y=380, width=40, height=40, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
 
     #Score
     start_time = time.time()
@@ -91,7 +93,6 @@ def init_game():
     solution_path = []
     solving = False
     current_move = 0
-    last_move_time = 0
     algorithm = None
     heuristic = None
 
@@ -102,16 +103,7 @@ def init_game():
 
 
     while running:
-        if solving and solution_path:
-            now = time.time()
-            if now - last_move_time >= 1 and current_move < len(solution_path):
-                game_state = solution_path[current_move]
-                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-                current_move += 1
-                last_move_time = now
-            if current_move >= len(solution_path):
-                solving = False
-
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False      
@@ -141,6 +133,16 @@ def init_game():
                 start_time = time.time()
                 steps_count = 0
                 selected_bottle = None
+
+            if btm_prev_move.is_clicked(event) and solving and current_move > 0:
+                current_move -= 1
+                game_state = solution_path[current_move]
+                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+            
+            if btn_next_move.is_clicked(event) and solving and current_move < len(solution_path) - 1:
+                current_move += 1
+                game_state = solution_path[current_move]
+                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
 
             algorithms_dropdown.handle_click(event)
             algorithm = algorithms_dropdown.selected 
@@ -186,11 +188,18 @@ def init_game():
 
         if algorithm in ["A*", "Greedy", "Weighted A*"]:
             heuristics_dropdown.draw(screen)
+        
+        if solving:
+            btn_next_move.draw(screen)
+            btm_prev_move.draw(screen)
 
         elapsed_time = int(time.time() - start_time)
         text = f"Time: {elapsed_time}s   Steps: {steps_count}"
-        text_surface = font.render(text, True, (255, 255, 255))
-        screen.blit(text_surface, (20, 20))
+        if not solving:
+            text_surface = font.render(text, True, (255, 255, 255))
+            screen.blit(text_surface, (20, 20))
+
+        
 
         pygame.display.flip()
 
