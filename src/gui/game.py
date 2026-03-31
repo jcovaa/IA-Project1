@@ -133,6 +133,9 @@ def init_game():
                 start_time = time.time()
                 steps_count = 0
                 selected_bottle = None
+                solving = False
+                solution_path = []
+                current_move = 0
 
             if btm_prev_move.is_clicked(event) and solving and current_move > 0:
                 current_move -= 1
@@ -181,13 +184,17 @@ def init_game():
         draw_bottles(screen, game_state, bottles, selected_bottle)
 
         draw_panel(screen, panel_x)
-        selector.draw(screen)
-        btn_generate.draw(screen)
-        algorithms_dropdown.draw(screen)
-        solve_button.draw(screen)
+
+        if not solving:
+            selector.draw(screen)
+            btn_generate.draw(screen)
+            algorithms_dropdown.draw(screen)
+            solve_button.draw(screen)
 
         if algorithm in ["A*", "Greedy", "Weighted A*"]:
             heuristics_dropdown.draw(screen)
+
+        #falta os restantes diferes de algoritmos
         
         if solving:
             btn_next_move.draw(screen)
