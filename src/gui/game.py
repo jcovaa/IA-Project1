@@ -1,5 +1,5 @@
 import pygame
-from .components import Button, DifficultySelector, Dropdown
+from .components import Button, DifficultySelector, Dropdown, InputBox
 from .bottles import draw_bottles, get_bottles
 from src.game.gameState import pour, solve, solution
 import time
@@ -61,14 +61,17 @@ def init_game():
     algorithms = list(algorithms_map.keys())
     hueristics = list(heuristics_map.keys())
 
+    #Painel
     algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
-    heuristics_dropdown = Dropdown(panel_x + 20, 370, 160, 45, hueristics)
+    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 45, hueristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
     return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
-    hint_btn = Button(x=panel_x + 20, y=350, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
+    hint_btn = Button(x=panel_x + 20, y=550, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
     btn_next_move = Button(x=panel_x + 110, y=20, width=80, height=80, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
     btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
-
+    weigt_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
+    depth_limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
+    
     #Score
     start_time = time.time()
     steps_count = 0
@@ -166,10 +169,10 @@ def init_game():
 
                 if algorithm == "A*" or algorithm == "Greedy":
                     sol = solve(func, game_state, heuristic_func)
-                elif algorithm == "WeightedA*":
-                    sol = solve(func, game_state, heuristic_func, weight=2) #por enquanto valor default
+                elif algorithm == "Weighted A*":
+                    sol = solve(func, game_state, heuristic_func=heuristic_func, weight=int(weigt_input.text or 2)) #deviamos por mandatory
                 elif algorithm == "DLS" or algorithm == "IDS":
-                    sol = solve(func, game_state, depth_limit=10) #por enquanto valor default
+                    sol = solve(func, game_state, depth_limit=int(depth_limit_input.text or 10)) #deviamos por mandatory
                 else:
                     sol = solve(func, game_state)
 
@@ -188,6 +191,12 @@ def init_game():
             if algorithm in ["A*", "Greedy", "Weighted A*"]:
                 heuristics_dropdown.handle_click(event)
 
+            if algorithm in ["DLS", "IDS"]:
+                depth_limit_input.handle_event(event)
+
+            if algorithm == "Weighted A*":
+                weigt_input.handle_event(event)
+
             if solve_button.is_clicked(event):
                 algorithm = algorithms_dropdown.selected
                 func = algorithms_map[algorithm]
@@ -197,10 +206,10 @@ def init_game():
 
                 if algorithm == "A*" or algorithm == "Greedy":
                     sol = solve(func, game_state, heuristic_func)
-                elif algorithm == "WeightedA*":
-                    sol = solve(func, game_state, heuristic_func, weight=2) #por enquanto valor default
+                elif algorithm == "Weighted A*":
+                    sol = solve(func, game_state, heuristic_func=heuristic_func, weight=int(weigt_input.text or 2)) #deviamos por mandatory
                 elif algorithm == "DLS" or algorithm == "IDS":
-                    sol = solve(func, game_state, depth_limit=10) #por enquanto valor default
+                    sol = solve(func, game_state, depth_limit=int(depth_limit_input.text or 10)) #deviamos por mandatory
                 else:
                     sol = solve(func, game_state)
 
@@ -225,10 +234,19 @@ def init_game():
             hint_btn.draw(screen)
             selector.draw(screen)
             btn_generate.draw(screen)
+            
+            if algorithm in ["DLS", "IDS"]:
+                depth_limit_input.draw(screen)
+        
+            if algorithm == "Weighted A*":
+                weigt_input.draw(screen)
+
+            if algorithm in ["A*", "Greedy", "Weighted A*"]:
+                heuristics_dropdown.draw(screen)
+
             algorithms_dropdown.draw(screen)
 
-        if algorithm in ["A*", "Greedy", "Weighted A*"]:
-            heuristics_dropdown.draw(screen)
+            
 
         #falta os restantes diferes de algoritmos
         

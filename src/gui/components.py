@@ -127,3 +127,43 @@ class Dropdown:
    @property
    def selected(self):
       return self.options[self.selected_index]
+
+class InputBox:
+    def __init__(self, x, y, w, h, placeholder='', font_size=18):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color_inactive = (60, 60, 60)
+        self.color_active = (100, 180, 250)
+        self.color = self.color_inactive
+        self.text = ''
+        self.placeholder = placeholder
+        self.font = pygame.font.SysFont("Arial", font_size)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+            self.color = self.color_active if self.active else self.color_inactive
+
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_RETURN:
+                value = self.text
+                self.text = ''
+                return value
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            elif event.unicode.isdigit():
+                self.text += event.unicode
+
+        return None
+
+    def draw(self, screen):
+        if self.text:
+            txt_surface = self.font.render(self.text, True, (255, 255, 255))
+        else:
+            txt_surface = self.font.render(self.placeholder, True, (130, 130, 130))
+        
+        screen.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)
