@@ -56,16 +56,18 @@ def init_game():
 
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
-    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo
+    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo
     
     algorithms = list(algorithms_map.keys())
     hueristics = list(heuristics_map.keys())
 
     algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
     heuristics_dropdown = Dropdown(panel_x + 20, 370, 160, 45, hueristics)
-    solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(180, 50, 50), hover_color=(210, 70, 70))
-    btn_next_move = Button(x=panel_x + 80, y=380, width=40, height=40, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
-    btm_prev_move = Button(x=panel_x + 20, y=380, width=40, height=40, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
+    solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
+    return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
+    hint_btn = Button(x=panel_x + 20, y=350, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
+    btn_next_move = Button(x=panel_x + 110, y=20, width=80, height=80, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
+    btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
 
     #Score
     start_time = time.time()
@@ -80,10 +82,8 @@ def init_game():
     spacing = 40
 
     #game setup
-    #provisorio 
     current_difficulty = "easy"
     game_state = generate_puzzle(current_difficulty, seed=42)
-    #solve # dar opçoes
 
     running = True
     selected_bottle = None
@@ -95,6 +95,7 @@ def init_game():
     current_move = 0
     algorithm = None
     heuristic = None
+    current_puzzle = game_state
 
     #animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
     #animation_data = None
@@ -146,6 +147,39 @@ def init_game():
                 current_move += 1
                 game_state = solution_path[current_move]
                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+            
+            if return_btn.is_clicked(event):
+                solving = False
+                solution_path = []
+                current_move = 0
+                game_state = current_puzzle
+                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                start_time = time.time()
+                steps_count = 0
+            
+            if hint_btn.is_clicked(event) and not solving:
+                algorithm = algorithms_dropdown.selected
+                func = algorithms_map[algorithm]
+
+                heuristic = heuristics_dropdown.selected
+                heuristic_func = heuristics_map.get(heuristic)
+
+                if algorithm == "A*" or algorithm == "Greedy":
+                    sol = solve(func, game_state, heuristic_func)
+                elif algorithm == "WeightedA*":
+                    sol = solve(func, game_state, heuristic_func, weight=2) #por enquanto valor default
+                elif algorithm == "DLS" or algorithm == "IDS":
+                    sol = solve(func, game_state, depth_limit=10) #por enquanto valor default
+                else:
+                    sol = solve(func, game_state)
+
+                """elif algorithm == "Bidirectional":
+                    #temos q fazer uma func nova
+                else: """
+
+                solution_path = solution(sol) 
+                game_state = solution_path[1] if len(solution_path) > 1 else game_state
+                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
 
             algorithms_dropdown.handle_click(event)
             algorithm = algorithms_dropdown.selected 
@@ -184,12 +218,14 @@ def init_game():
         draw_bottles(screen, game_state, bottles, selected_bottle)
 
         draw_panel(screen, panel_x)
+        return_btn.draw(screen)
 
         if not solving:
+            solve_button.draw(screen)
+            hint_btn.draw(screen)
             selector.draw(screen)
             btn_generate.draw(screen)
             algorithms_dropdown.draw(screen)
-            solve_button.draw(screen)
 
         if algorithm in ["A*", "Greedy", "Weighted A*"]:
             heuristics_dropdown.draw(screen)
