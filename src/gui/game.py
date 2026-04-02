@@ -134,6 +134,8 @@ def init_game():
     bottle_width = 60
     bottle_height = 200
     spacing = 40
+
+    #tela de vitoria
     font_big = pygame.font.SysFont(None, 64)
     font_small = pygame.font.SysFont(None, 32)
     puzzle_solved = False
