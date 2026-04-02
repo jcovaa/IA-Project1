@@ -1,9 +1,10 @@
 import pygame
 from .components import Button, DifficultySelector, Dropdown, InputBox
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solve, solution
+from src.game.gameState import pour, solve, solution, goal_state
 import time
 from src.puzzle_generator import generate_puzzle
+import random, math
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -46,6 +47,56 @@ heuristics_map = {
     "Heuristic 4": heuristic4
 } 
 
+def calculate_score(steps, time_elapsed, difficulty):
+
+    difficulty_multiplier = {
+        "easy": 1,
+        "medium": 1.5,
+        "hard": 2
+    }
+
+    base_score = 1000
+
+    score = base_score \
+        - (steps * 15) \
+        - (time_elapsed * 2)
+
+    return int(score * difficulty_multiplier[difficulty])
+
+def draw_win_screen(screen, font_big, font_small, steps, time_elapsed,score,confetti):
+
+    confetti.update()
+    confetti.draw(screen)
+
+    overlay = pygame.Surface((SCREEN_W, SCREEN_H))
+    overlay.set_alpha(170)
+    overlay.fill((0, 0, 0))
+    screen.blit(overlay, (0, 0))
+
+    title = font_big.render("Puzzle Solved!", True, (255, 255, 255))
+    stats = font_small.render(
+        f"Steps: {steps}   Time: {time_elapsed}s",
+        True,
+        (220, 220, 220)
+    )
+
+    score_text = font_small.render(
+        f"Score: {score}",
+        True,
+        (220,220,220)
+    )
+
+    hint = font_small.render(
+        "Click Generate to play again",
+        True,
+        (180, 180, 180)
+    )
+
+    screen.blit(title, title.get_rect(center=(SCREEN_W//2, SCREEN_H//2 - 40)))
+    screen.blit(stats, stats.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 10)))
+    screen.blit(score_text,score_text.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 50)))
+    screen.blit(hint, hint.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 90)))
+
 def init_game():
 
     # pygame setup
@@ -83,6 +134,12 @@ def init_game():
     bottle_width = 60
     bottle_height = 200
     spacing = 40
+    font_big = pygame.font.SysFont(None, 64)
+    font_small = pygame.font.SysFont(None, 32)
+    puzzle_solved = False
+    final_time = None
+    animation_time = 0
+    confetti = Confetti()
 
     #game setup
     current_difficulty = "easy"
@@ -125,6 +182,9 @@ def init_game():
                                 game_state, _ = result
                                 steps_count += 1
                                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                                if goal_state(game_state):
+                                    puzzle_solved = True
+                                    final_time = int(time.time() - start_time)
                             selected_bottle = None
                         break
 
@@ -140,6 +200,8 @@ def init_game():
                 solving = False
                 solution_path = []
                 current_move = 0
+                puzzle_solved = False
+                final_time = None
 
             if btm_prev_move.is_clicked(event) and solving and current_move > 0:
                 current_move -= 1
@@ -150,7 +212,9 @@ def init_game():
                 current_move += 1
                 game_state = solution_path[current_move]
                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-            
+                if goal_state(game_state):
+                    puzzle_solved = True
+
             if return_btn.is_clicked(event):
                 solving = False
                 solution_path = []
@@ -159,6 +223,8 @@ def init_game():
                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                 start_time = time.time()
                 steps_count = 0
+                puzzle_solved = False
+                final_time = None
             
             if hint_btn.is_clicked(event) and not solving:
                 algorithm = algorithms_dropdown.selected
@@ -224,7 +290,13 @@ def init_game():
             #fazer animaçoes
 
         screen.fill((30, 30, 30)) #?
-        draw_bottles(screen, game_state, bottles, selected_bottle)
+        jump_offset = 0
+        #animating bottles
+        if puzzle_solved:
+            animation_time += 0.08
+            jump_offset = int(abs(math.sin(animation_time)) * 12)
+
+        draw_bottles(screen, game_state, bottles, selected_bottle,jump_offset)
 
         draw_panel(screen, panel_x)
         return_btn.draw(screen)
@@ -260,10 +332,51 @@ def init_game():
             text_surface = font.render(text, True, (255, 255, 255))
             screen.blit(text_surface, (20, 20))
 
-        
+        if puzzle_solved:
+            if final_time is None:
+                final_time = 0
+            elapsed_time = final_time if puzzle_solved else int(time.time() - start_time) 
+            score = calculate_score(steps_count,final_time,current_difficulty)
+            draw_win_screen(screen,font_big,font_small,steps_count,elapsed_time,score,confetti)
 
         pygame.display.flip()
 
         clock.tick(60)  # limits FPS to 60
 
     pygame.quit()
+
+
+
+# confettis
+class Confetti:
+    def __init__(self):
+        self.particles = []
+        for _ in range(120):
+            self.particles.append({
+                "x": random.randint(0, SCREEN_W),
+                "y": random.randint(-SCREEN_H, 0),
+                "speed": random.uniform(2, 5),
+                "size": random.randint(4, 8),
+                "color": random.choice([
+                    (255,50,50),
+                    (50,255,50),
+                    (50,50,255),
+                    (255,255,50),
+                    (255,50,255),
+                    (50,255,255)
+                ])
+            })
+
+    def update(self):
+        for p in self.particles:
+            p["y"] += p["speed"]
+            if p["y"] > SCREEN_H:
+                p["y"] = random.randint(-50, -10)
+
+    def draw(self, screen):
+        for p in self.particles:
+            pygame.draw.rect(
+                screen,
+                p["color"],
+                (p["x"], p["y"], p["size"], p["size"])
+            )
