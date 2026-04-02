@@ -1,7 +1,7 @@
 import pygame
 from .components import Button, DifficultySelector, Dropdown, InputBox
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solve, solution, goal_state
+from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves
 import time
 from src.puzzle_generator import generate_puzzle
 import random, math
@@ -150,6 +150,7 @@ def init_game():
     running = True
     selected_bottle = None
     bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+    puzzle_stuck=False
     
     #Computer Mode
     solution_path = []
@@ -187,6 +188,8 @@ def init_game():
                                 if goal_state(game_state):
                                     puzzle_solved = True
                                     final_time = int(time.time() - start_time)
+                                elif not has_possible_moves(game_state):
+                                    puzzle_stuck = True
                             selected_bottle = None
                         break
 
@@ -204,6 +207,7 @@ def init_game():
                 current_move = 0
                 puzzle_solved = False
                 final_time = None
+                puzzle_stuck=False
 
             if btm_prev_move.is_clicked(event) and solving and current_move > 0:
                 current_move -= 1
@@ -227,6 +231,7 @@ def init_game():
                 steps_count = 0
                 puzzle_solved = False
                 final_time = None
+                puzzle_stuck=False
             
             if hint_btn.is_clicked(event) and not solving:
                 algorithm = algorithms_dropdown.selected
@@ -341,6 +346,17 @@ def init_game():
             score = calculate_score(steps_count,final_time,current_difficulty)
             draw_win_screen(screen,font_big,font_small,steps_count,elapsed_time,score,confetti)
 
+        if puzzle_stuck:
+            stuck_text = font_big.render(
+                "No moves possible!",
+                True,
+                (255,80,80)
+            )
+            screen.blit(
+                stuck_text,
+                stuck_text.get_rect(center=(SCREEN_W//2, 80))
+            )
+            
         pygame.display.flip()
 
         clock.tick(60)  # limits FPS to 60
