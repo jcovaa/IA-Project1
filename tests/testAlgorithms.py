@@ -94,6 +94,17 @@ class TestAlgorithms(unittest.TestCase):
       self.assertEqual(result.state, self.goal_state)
       self.assert_stats(stats)
 
+   def test_iterative_deepening_a_star_search(self):
+      result, stats = alg.iterative_deepening_a_star_search(
+         self.initial_state,
+         self.goal_state_func,
+         self.operators_func,
+         heuristic_func=lambda state: 0,
+      )
+      self.assertIsNotNone(result)
+      self.assertEqual(result.state, self.goal_state)
+      self.assert_stats(stats)
+
    @unittest.skip("bidirectional_search not implemented yet")
    def test_bidirectional_search(self):
       result, stats = alg.bidirectional_search(self.initial_state, self.goal_state, self.operators_func)
