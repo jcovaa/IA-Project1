@@ -4,24 +4,24 @@ from .node import TreeNode
 
 
 def breadth_first_search(initial_state, goal_state_func, operators_func):
-     root = TreeNode(initial_state)  # create the root node in the search tree
-     queue = deque([root])  # initialize the queue to store the nodes
-     visited = set()
-     stats = {"states_visited": 0}
+    root = TreeNode(initial_state)  # create the root node in the search tree
+    queue = deque([root])  # initialize the queue to store the nodes
+    visited = set()
+    stats = {"states_visited": 0}
 
-     while queue:
-          node = queue.popleft()  # get first element in the queue
-          if goal_state_func(node.state):  # check goal state
+    while queue:
+        node = queue.popleft()  # get first element in the queue
+        if goal_state_func(node.state):  # check goal state
             return node, stats
 
-          if node.state in visited:
+        if node.state in visited:
             continue
 
-          visited.add(node.state)
-          stats["states_visited"] += 1
+        visited.add(node.state)
+        stats["states_visited"] += 1
 
-          for state, _ in operators_func(node.state):  # go through next states
-            # create tree node with the new state
+        for state, _ in operators_func(node.state):  # go through next states
+        # create tree node with the new state
             state_node = TreeNode(state)
 
             # link child node to its parent in the tree
@@ -30,32 +30,32 @@ def breadth_first_search(initial_state, goal_state_func, operators_func):
             # enqueue the child node
             queue.append(state_node)
 
-     return None, stats
+    return None, stats
 
 
 def depth_first_search(initial_state, goal_state_func, operators_func):
-     root = TreeNode(initial_state)
-     stack = [root]
-     visited = set()
-     stats = {"states_visited": 0}
+    root = TreeNode(initial_state)
+    stack = [root]
+    visited = set()
+    stats = {"states_visited": 0}
 
-     while stack:
-          node = stack.pop()
-          if goal_state_func(node.state):
-                return node, stats
+    while stack:
+        node = stack.pop()
+        if goal_state_func(node.state):
+            return node, stats
 
-          if node.state in visited:
-                continue
+        if node.state in visited:
+            continue
 
-          visited.add(node.state)
-          stats["states_visited"] += 1
+        visited.add(node.state)
+        stats["states_visited"] += 1
 
-          for state, _ in operators_func(node.state):
-                state_node = TreeNode(state)
-                node.add_child(state_node)
-                stack.append(state_node)
+        for state, _ in operators_func(node.state):
+            state_node = TreeNode(state)
+            node.add_child(state_node)
+            stack.append(state_node)
 
-     return None, stats
+    return None, stats
 
 
 def depth_limited_search(initial_state, goal_state_func, operators_func, depth_limit):
