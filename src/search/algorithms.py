@@ -206,6 +206,36 @@ def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuri
 
     return None
 
+def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_func, heuristic_func):
+    def search(node, g, threshold):
+        f = g + heuristic_func(node.state)
+        if f > threshold:
+            return f
+        if goal_state_func(node.state):
+            return node, f
+        
+        min_threshold = float('inf')
+        for state, step_cost in operators_func(node.state):
+            child = TreeNode(state, node)
+            node.add_child(child)
+            result, new_f = search(child, g + step_cost, threshold)
+            if result:
+                return result, new_f
+            min_threshold = min(min_threshold, new_f)
+        
+        return None, min_threshold
+    
+    root = TreeNode(initial_state)
+    threshold = heuristic_func(root.state)
+
+    while True:
+        result, new_threshold = search(root, 0, threshold)
+        if result:
+            return result
+        if new_threshold == float('inf'):
+            return None
+        threshold = new_threshold
+
 # not tested
 def bidirectional_search(initial_state, goal_state, operators_func):
    if initial_state == goal_state:
