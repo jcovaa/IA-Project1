@@ -2,60 +2,61 @@
 from collections import deque
 from .node import TreeNode
 
-def breadth_first_search(initial_state, goal_state_func, operators_func):
-   root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = deque([root])   # initialize the queue to store the nodes
-   visited = set()
-   stats = {"states_visited": 0}
 
-   while queue:
-         node = queue.popleft()   # get first element in the queue
-         if goal_state_func(node.state):   # check goal state
+def breadth_first_search(initial_state, goal_state_func, operators_func):
+     root = TreeNode(initial_state)  # create the root node in the search tree
+     queue = deque([root])  # initialize the queue to store the nodes
+     visited = set()
+     stats = {"states_visited": 0}
+
+     while queue:
+          node = queue.popleft()  # get first element in the queue
+          if goal_state_func(node.state):  # check goal state
             return node, stats
-         
-         if node.state in visited:
+
+          if node.state in visited:
             continue
 
-         visited.add(node.state)
-         stats["states_visited"] += 1
+          visited.add(node.state)
+          stats["states_visited"] += 1
 
-         for state, _ in operators_func(node.state):   # go through next states
+          for state, _ in operators_func(node.state):  # go through next states
             # create tree node with the new state
             state_node = TreeNode(state)
 
             # link child node to its parent in the tree
             node.add_child(state_node)
 
-
             # enqueue the child node
             queue.append(state_node)
 
+     return None, stats
 
-   return None, stats
 
 def depth_first_search(initial_state, goal_state_func, operators_func):
-   root = TreeNode(initial_state)
-   stack = [root]
-   visited = set()
-   stats = {"states_visited": 0}
+     root = TreeNode(initial_state)
+     stack = [root]
+     visited = set()
+     stats = {"states_visited": 0}
 
-   while stack:
-      node = stack.pop()
-      if goal_state_func(node.state):
-         return node, stats
+     while stack:
+          node = stack.pop()
+          if goal_state_func(node.state):
+                return node, stats
 
-      if node.state in visited:
-         continue
+          if node.state in visited:
+                continue
 
-      visited.add(node.state)
-      stats["states_visited"] += 1
+          visited.add(node.state)
+          stats["states_visited"] += 1
 
-      for state, _ in operators_func(node.state):
-         state_node = TreeNode(state)
-         node.add_child(state_node)
-         stack.append(state_node)
+          for state, _ in operators_func(node.state):
+                state_node = TreeNode(state)
+                node.add_child(state_node)
+                stack.append(state_node)
 
-   return None, stats
+     return None, stats
+
 
 def depth_limited_search(initial_state, goal_state_func, operators_func, depth_limit):
     root = TreeNode(initial_state)
@@ -67,7 +68,7 @@ def depth_limited_search(initial_state, goal_state_func, operators_func, depth_l
 
         if goal_state_func(node.state):
             return node, stats
-        
+
         # counts every pop, including revisits
         stats["states_visited"] += 1
 
@@ -79,15 +80,17 @@ def depth_limited_search(initial_state, goal_state_func, operators_func, depth_l
 
     return None, stats
 
-def iterative_deepening_search(initial_state, goal_state_func, operators_func, depth_limit):
-   total_stats = {"states_visited": 0}
-   for depth in range(depth_limit):
-      goal, stats = depth_limited_search(initial_state, goal_state_func, operators_func, depth)
-      total_stats["states_visited"] += stats["states_visited"]
-      if goal:
-         return goal, total_stats
 
-   return None, total_stats
+def iterative_deepening_search(initial_state, goal_state_func, operators_func, depth_limit):
+    total_stats = {"states_visited": 0}
+    for depth in range(depth_limit):
+        goal, stats = depth_limited_search(initial_state, goal_state_func, operators_func, depth)
+        total_stats["states_visited"] += stats["states_visited"]
+        if goal:
+            return goal, total_stats
+
+    return None, total_stats
+
 
 def uniform_cost_search(initial_state, goal_state_func, operators_func):
     root = TreeNode(initial_state)
@@ -103,92 +106,96 @@ def uniform_cost_search(initial_state, goal_state_func, operators_func):
 
         if node.state in visited:
             continue
-        
+
         visited.add(node.state)
         stats["states_visited"] += 1
-        
+
         for state, step_cost in operators_func(node.state):
             state_node = TreeNode(state)
             node.add_child(state_node)
             total_cost = cost + step_cost
             queue.append((state_node, total_cost))
-        
+
         queue.sort(key=lambda x: x[1])
 
     return None, stats
 
+
 def greedy_search(initial_state, goal_state_func, operators_func, heuristic_func):
-   root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
-   stats = {"states_visited": 0}
+    root = TreeNode(initial_state)  # create the root node in the search tree
+    queue = [(root, heuristic_func(root.state))]  # initialize the queue to store the nodes
+    stats = {"states_visited": 0}
 
-   visited = set()
+    visited = set()
 
-   while queue:
-      (node, _) = queue.pop(0)   # get first element in the queue
-      if goal_state_func(node.state):   # check goal state
-         return node, stats
+    while queue:
+        (node, _) = queue.pop(0)  # get first element in the queue
+        if goal_state_func(node.state):  # check goal state
+            return node, stats
 
-      if node.state in visited:
-         continue
+        if node.state in visited:
+            continue
 
-      visited.add(node.state)
-      stats["states_visited"] += 1
+        visited.add(node.state)
+        stats["states_visited"] += 1
 
-      for state, _ in operators_func(node.state):   # go through next states
-         # create tree node with the new state
-         tree = TreeNode(state,node)
+        for state, _ in operators_func(node.state):  # go through next states
+            # create tree node with the new state
+            tree = TreeNode(state, node)
 
-         # link child node to its parent in the tree
-         node.add_child(tree)
+            # link child node to its parent in the tree
+            node.add_child(tree)
 
-         # enqueue the child node
-         queue.append((tree, heuristic_func(state))) 
+            # enqueue the child node
+            queue.append((tree, heuristic_func(state)))
 
-      # sort the queue by state heuristic value
-      queue.sort(key=lambda x: x[1])
+        # sort the queue by state heuristic value
+        queue.sort(key=lambda x: x[1])
 
-   return None, stats
+    return None, stats
+
 
 def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func):
-   root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
-   stats = {"states_visited": 0}
+    root = TreeNode(initial_state)  # create the root node in the search tree
+    queue = [(root, heuristic_func(root.state))]  # initialize the queue to store the nodes
+    stats = {"states_visited": 0}
 
-   visited = set()
+    visited = set()
 
-   while queue:
+    while queue:
 
-      (node, _) = queue.pop(0)
-      if goal_state_func(node.state):   # check goal state
-         return node, stats
+        (node, _) = queue.pop(0)
+        if goal_state_func(node.state):  # check goal state
+            return node, stats
 
-      if node.state in visited:
-         continue
+        if node.state in visited:
+            continue
 
-      visited.add(node.state)
-      stats["states_visited"] += 1
+        visited.add(node.state)
+        stats["states_visited"] += 1
 
-      for state, step_cost in operators_func(node.state):   # go through next states
-         # create tree node with the new state
-         tree = TreeNode(state,node)
+        for state, step_cost in operators_func(node.state):  # go through next states
+            # create tree node with the new state
+            tree = TreeNode(state, node)
 
-         # link child node to its parent in the tree, including the operator cost
-         node.add_child(tree)
+            # link child node to its parent in the tree, including the operator cost
+            node.add_child(tree)
 
-         # enqueue the child node
-         tree.cost = node.cost + step_cost
+            # enqueue the child node
+            tree.cost = node.cost + step_cost
 
-         cost = tree.cost + heuristic_func(state)
+            cost = tree.cost + heuristic_func(state)
 
-         queue.append((tree, cost))
+            queue.append((tree, cost))
 
-      # sort the queue by state full cost (path cost + heuristic value)
-      queue = sorted(queue, key=lambda x: x[1])
+        # sort the queue by state full cost (path cost + heuristic value)
+        queue = sorted(queue, key=lambda x: x[1])
 
-   return None, stats
+    return None, stats
 
-#not tested
+
+
+# not tested
 def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuristic_func, weight):
     root = TreeNode(initial_state)
     queue = [(root, heuristic_func(root.state) * weight)]
@@ -197,7 +204,6 @@ def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuri
     visited = set()
 
     while queue:
-        
         (node, _) = queue.pop(0)
         if goal_state_func(node.state):
             return node, stats
@@ -209,11 +215,10 @@ def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuri
         stats["states_visited"] += 1
 
         for state, step_cost in operators_func(node.state):
-            
             tree = TreeNode(state, node)
 
             node.add_child(tree)
-            
+
             tree.cost = node.cost + step_cost
 
             cost = tree.cost + weight * heuristic_func(state)
@@ -224,48 +229,47 @@ def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuri
 
     return None, stats
 
+
 # not tested
 def bidirectional_search(initial_state, goal_state, operators_func):
-   if initial_state == goal_state:
-      return TreeNode(initial_state), {"states_visited": 0}
+    if initial_state == goal_state:
+        return TreeNode(initial_state), {"states_visited": 0}
 
-   front_queue = deque([TreeNode(initial_state)])
-   back_queue = deque([TreeNode(goal_state)])
+    front_queue = deque([TreeNode(initial_state)])
+    back_queue = deque([TreeNode(goal_state)])
 
-   front_visited = {TreeNode(initial_state)}
-   back_visited = {TreeNode(goal_state)}
+    front_visited = {TreeNode(initial_state)}
+    back_visited = {TreeNode(goal_state)}
 
-   stats = {"states_visited": 0}
+    stats = {"states_visited": 0}
 
-   while front_queue and back_queue:
-      
-      node = front_queue.popleft()
-      stats["states_visited"] += 1
+    while front_queue and back_queue:
+        node = front_queue.popleft()
+        stats["states_visited"] += 1
 
+        for state, _ in operators_func(node.state):
+            if state not in front_visited:
+                tree = TreeNode(state)
+                node.add_child(tree)
+                front_visited.add(tree)
+                front_queue.append(tree)
 
-      for state, _ in operators_func(node.state):
-         if state not in front_visited:
-               tree = TreeNode(state)
-               node.add_child(tree)
-               front_visited.add(tree)
-               front_queue.append(tree)
+            if state in back_visited:
+                return front_visited[state]
 
-         if state in back_visited:
-               return front_visited[state] 
+        node = back_queue.popleft()
 
-      node = back_queue.popleft()
+        for state, _ in operators_func(node.state):
+            if state not in back_visited:
+                tree = TreeNode(state)
+                node.add_child(tree)
+                back_visited[state] = tree
+                back_queue.append(tree)
 
-      for state, _ in operators_func(node.state):
-         if state not in back_visited:
-               tree = TreeNode(state)
-               node.add_child(tree)
-               back_visited[state] = tree
-               back_queue.append(tree)
+            if state in front_visited:
+                return front_visited[state]
 
-         if state in front_visited:
-               return front_visited[state] 
-
-   return None, stats
+    return None, stats
 
 
 def heuristic1(state):
@@ -293,10 +297,10 @@ def heuristic3(state):
     for bottle in state.bottles:
         if not bottle:
             continue
-        
+
         # penaliza mistura
         score += len(set(bottle)) - 1
-        
+
         # penaliza não estar cheia
         if len(bottle) != state.capacity:
             score += 1
@@ -316,5 +320,5 @@ def heuristic4(state):
             if bottle[k] != bottle[k - 1]:
                 groups += 1
         score += groups - 1
-    
+
     return score
