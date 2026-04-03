@@ -53,6 +53,11 @@ class TestAlgorithms(unittest.TestCase):
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
 
+   def test_iterative_deepening_a_star_search(self):
+      result = alg.iterative_deepening_a_star_search(self.initial_state, self.goal_state_func, self.operators_func, heuristic_func=lambda state: 0, depth_limit=5)
+      self.assertIsNotNone(result)
+      self.assertEqual(result.state, self.goal_state)
+
    #not implemented yet
    def test_bidirectional_search(self):
       result = alg.bidirectional_search(self.initial_state, self.goal_state, self.operators_func)
