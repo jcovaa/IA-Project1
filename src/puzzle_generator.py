@@ -1,5 +1,5 @@
 import random
-from src.game.gameState import GameState
+from game.gameState import GameState
 
 DIFICULTY_CONFIGS = {
    "easy": {"bottles": 3, "capacity": 3, "colors": 3, "empty": 2},
