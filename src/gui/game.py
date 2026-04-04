@@ -46,8 +46,8 @@ heuristics_map = {
 
 def init_game():
 
-    # pygame setup
-    pygame.init()
+    # pygame setup 
+    pygame.init() #passar para a main
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H)) # provsorio
     pygame.display.set_caption("Water Sort Puzzle")
     clock = pygame.time.Clock()
@@ -70,39 +70,44 @@ def init_game():
     weight_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
     depth_limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
     
-    #Score
-    start_time = time.time()
-    steps_count = 0
-    font = pygame.font.SysFont(None, 36)
-
-    #valores provisorios bottles
+    #valores provisorios bottles - por macro
     x_start = 100
     y_start = 100
     bottle_width = 60
     bottle_height = 200
     spacing = 40
 
+    #Game Setup - confirmar se é tudo resetado sempre
+    #Geral
+    running = True
+    current_difficulty = "easy"
+    game_state = generate_puzzle(current_difficulty, seed=42)
+    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+    #Control state
+    puzzle_solved = False
+    puzzle_stuck=False
+    solution_path = []
+    #Player mode
+    selected_bottle = None
+    #Computer mode
+    solving = False
+    #Return state
+    current_puzzle = game_state
+    #Solver state
+    current_move = 0
+    #Dropdowns
+    algorithm = None
+    heuristic = None
     #Win Screeen - isto não devia estar aqui
     font_big = pygame.font.SysFont(None, 64)
     font_small = pygame.font.SysFont(None, 32)
-    puzzle_solved = False
-    final_time = None
     animation_time = 0
     confetti = Confetti()
-
-    #Game Setup - confirmar se é tudo resetado sempre
-    current_difficulty = "easy"
-    game_state = generate_puzzle(current_difficulty, seed=42)
-    running = True
-    selected_bottle = None
-    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-    puzzle_stuck=False
-    solution_path = []
-    solving = False
-    current_move = 0
-    algorithm = None
-    heuristic = None
-    current_puzzle = game_state
+    #Score
+    start_time = time.time()
+    final_time = None
+    steps_count = 0
+    font = pygame.font.SysFont(None, 36) #nao devia estar aqui
 
     while running:
         
@@ -221,7 +226,7 @@ def init_game():
                     puzzle_stuck = True
 
         #Draw
-        screen.fill((30, 30, 30)) #?
+        screen.fill((30, 30, 30))
 
         jump_offset = 0
         if puzzle_solved:
@@ -266,7 +271,6 @@ def init_game():
         elif solving:
             btn_next_move.draw(screen)
             btm_prev_move.draw(screen)
-
 
         if puzzle_stuck: #melhorar maybe 
             stuck_text = font_big.render("No moves possible!",True,(255,80,80))
