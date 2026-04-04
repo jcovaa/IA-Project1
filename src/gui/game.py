@@ -1,11 +1,10 @@
 import pygame
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves
+from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves, run_solver, calculate_score
 import time
 from src.puzzle_generator import generate_puzzle
 import math
-from .aux_functions import calculate_score, run_solver
 from .draw import draw_panel, draw_win_screen
 
 from src.search.algorithms import (
