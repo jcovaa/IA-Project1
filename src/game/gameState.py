@@ -112,10 +112,12 @@ def solution(node):
     return list(reversed(path))
 
 def solve(func, state, *args, **kwargs):
+   result = func(state, goal_state, game_states, *args, **kwargs)
 
-	goal = func(state, goal_state, game_states,  *args, **kwargs) 
-    
-	return goal
+   # Search functions return (goal_node, stats); GUI only needs the node.
+   if isinstance(result, tuple):
+      return result[0]
+   return result
 
 def has_possible_moves(state): #rever ciclo in finito
     bottles = state.bottles
@@ -154,17 +156,22 @@ def has_possible_moves(state): #rever ciclo in finito
     return False
 
 def run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_input):
-    if algorithm in ("A*", "Greedy"):
-        return solve(func, game_state, heuristic_func)
-    elif algorithm == "Weighted A*":
-        return solve(func, game_state, heuristic_func=heuristic_func, weight=int(weight_input.text or 2))
-    elif algorithm in ("DLS", "IDS"):
-        return solve(func, game_state, depth_limit=int(depth_input.text or 10))
-    return solve(func, game_state)
+   def parse_int_or_default(value, default):
+      try:
+         text = (value or "").strip()
+         return int(text) if text else default
+      except ValueError:
+         return default
 
-    """elif algorithm == "Bidirectional":
-                    #temos q fazer uma func nova
-                else: """
+   if algorithm in ("A*", "Greedy"):
+      return solve(func, game_state, heuristic_func)
+   elif algorithm == "Weighted A*":
+      weight = parse_int_or_default(weight_input.text, 2)
+      return solve(func, game_state, heuristic_func=heuristic_func, weight=weight)
+   elif algorithm in ("DLS", "IDS"):
+      limit = parse_int_or_default(depth_input.text, 10)
+      return solve(func, game_state, limit=limit)
+   return solve(func, game_state)
 
 def calculate_score(steps, time_elapsed, difficulty):
 

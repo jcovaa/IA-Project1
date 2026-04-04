@@ -2,9 +2,9 @@ import time
 import tracemalloc
 import csv
 import threading
-from puzzle_generator import generate_puzzle
-from game.gameState import goal_state, game_states
-from search.algorithms import (
+from src.puzzle_generator import generate_puzzle
+from src.game.gameState import goal_state, game_states
+from src.search.algorithms import (
     breadth_first_search, depth_first_search,
     depth_limited_search, iterative_deepening_search,
     uniform_cost_search, greedy_search,
@@ -158,11 +158,3 @@ def save_results(results, difficulty, seed, filepath):
             if "error" not in row:
                 writer.writerow({k: row.get(k, "N/A") for k in writer.fieldnames})
     print(f"\nResults saved to {filepath}")
-
-if __name__ == "__main__":
-    for difficulty in ["easy", "medium"]:
-        benchmark(
-            difficulty=difficulty,
-            seed=42,
-            output_file=f"results_{difficulty}.csv"
-        )

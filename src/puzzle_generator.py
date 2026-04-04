@@ -1,5 +1,5 @@
 import random
-from game.gameState import GameState
+from src.game.gameState import GameState
 
 #mudar niveis
 DIFICULTY_CONFIGS = {
