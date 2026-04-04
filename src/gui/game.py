@@ -161,6 +161,8 @@ def init_game():
                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                 if goal_state(game_state):
                     puzzle_solved = True
+                    final_time = int(time.time() - start_time)
+                    steps_count = len(solution_path) - 1
 
             if return_btn.is_clicked(event):
                 solving = False
@@ -199,6 +201,10 @@ def init_game():
                     solution_path = solution(sol) 
                     game_state = solution_path[1] if len(solution_path) > 1 else game_state
                     bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                    if goal_state(game_state):          
+                        puzzle_solved = True
+                        final_time = int(time.time() - start_time)
+                        steps_count = len(solution_path) - 1
                 else:
                     puzzle_stuck = True
 
@@ -238,6 +244,8 @@ def init_game():
         #Always draw
         draw_panel(screen, panel_x)
         return_btn.draw(screen)
+        text_surface = font.render(text, True, (255, 255, 255))
+        screen.blit(text_surface, (20, 20))
 
         if not solving:
             solve_button.draw(screen)
@@ -255,9 +263,6 @@ def init_game():
                 heuristics_dropdown.draw(screen)
 
             algorithms_dropdown.draw(screen) 
-
-            text_surface = font.render(text, True, (255, 255, 255))
-            screen.blit(text_surface, (20, 20))
         elif solving:
             btn_next_move.draw(screen)
             btm_prev_move.draw(screen)

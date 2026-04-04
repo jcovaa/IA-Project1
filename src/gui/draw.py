@@ -7,8 +7,7 @@ def draw_panel(screen, panel_x):
     pygame.draw.rect(screen, (40, 40, 40), (panel_x, 0, PANEL_W, SCREEN_H))
     pygame.draw.line(screen, (80, 80, 80), (panel_x, 0), (panel_x, SCREEN_H), 2)
 
-
-def draw_win_screen(screen, font_big, font_small, steps, time_elapsed,score,confetti):
+def draw_win_screen(screen, font_big, font_small, steps, final_time, score, confetti):
 
     confetti.update()
     confetti.draw(screen)
@@ -20,7 +19,7 @@ def draw_win_screen(screen, font_big, font_small, steps, time_elapsed,score,conf
 
     title = font_big.render("Puzzle Solved!", True, (255, 255, 255))
     stats = font_small.render(
-        f"Steps: {steps}   Time: {time_elapsed}s",
+        f"Steps: {steps}   Time: {final_time}s",
         True,
         (220, 220, 220)
     )
