@@ -1,6 +1,8 @@
 import pygame
 import random
 
+SCREEN_W, SCREEN_H = 1280, 720
+
 class Button:
 
    def __init__(self, x, y, width, height, text, color=(70, 70, 70), hover_color=(100, 100, 100)):
@@ -169,9 +171,6 @@ class InputBox:
         screen.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
-
-# confettis
-SCREEN_W, SCREEN_H = 1280, 720
 
 class Confetti:
     def __init__(self):

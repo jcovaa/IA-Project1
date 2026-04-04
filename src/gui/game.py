@@ -5,6 +5,8 @@ from src.game.gameState import pour, solve, solution, goal_state, has_possible_m
 import time
 from src.puzzle_generator import generate_puzzle
 import math
+from .aux_functions import calculate_score, run_solver
+from .draw import draw_panel, draw_win_screen
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -23,10 +25,6 @@ from src.search.algorithms import (
 
 SCREEN_W, SCREEN_H = 1280, 720
 PANEL_W = 200
-
-def draw_panel(screen, panel_x):
-    pygame.draw.rect(screen, (40, 40, 40), (panel_x, 0, PANEL_W, SCREEN_H))
-    pygame.draw.line(screen, (80, 80, 80), (panel_x, 0), (panel_x, SCREEN_H), 2)
 
 algorithms_map = {
     "BFS": breadth_first_search,
@@ -47,80 +45,30 @@ heuristics_map = {
     "Heuristic 4": heuristic4
 } 
 
-def calculate_score(steps, time_elapsed, difficulty):
-
-    difficulty_multiplier = {
-        "easy": 1,
-        "medium": 1.5,
-        "hard": 2
-    }
-
-    base_score = 1000
-
-    score = base_score \
-        - (steps * 15) \
-        - (time_elapsed * 2)
-
-    return int(score * difficulty_multiplier[difficulty])
-
-def draw_win_screen(screen, font_big, font_small, steps, time_elapsed,score,confetti):
-
-    confetti.update()
-    confetti.draw(screen)
-
-    overlay = pygame.Surface((SCREEN_W, SCREEN_H))
-    overlay.set_alpha(170)
-    overlay.fill((0, 0, 0))
-    screen.blit(overlay, (0, 0))
-
-    title = font_big.render("Puzzle Solved!", True, (255, 255, 255))
-    stats = font_small.render(
-        f"Steps: {steps}   Time: {time_elapsed}s",
-        True,
-        (220, 220, 220)
-    )
-
-    score_text = font_small.render(
-        f"Score: {score}",
-        True,
-        (220,220,220)
-    )
-
-    hint = font_small.render(
-        "Click Generate to play again",
-        True,
-        (180, 180, 180)
-    )
-
-    screen.blit(title, title.get_rect(center=(SCREEN_W//2, SCREEN_H//2 - 40)))
-    screen.blit(stats, stats.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 10)))
-    screen.blit(score_text,score_text.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 50)))
-    screen.blit(hint, hint.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 90)))
-
 def init_game():
 
     # pygame setup
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H)) # provsorio
     pygame.display.set_caption("Water Sort Puzzle")
-    clock = pygame.time.Clock() # contar o timer bem
+    clock = pygame.time.Clock()
 
-    panel_x = SCREEN_W - PANEL_W
-    selector = DifficultySelector(x=panel_x + 20, y=20)
-    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo
-    
     algorithms = list(algorithms_map.keys())
-    hueristics = list(heuristics_map.keys())
+    heuristics = list(heuristics_map.keys())
+
 
     #Painel
+    panel_x = SCREEN_W - PANEL_W
+    selector = DifficultySelector(x=panel_x + 20, y=20)
+    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo 
     algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
-    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 45, hueristics)
+    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 45, heuristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
     return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
     hint_btn = Button(x=panel_x + 20, y=550, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
     btn_next_move = Button(x=panel_x + 110, y=20, width=80, height=80, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
     btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
-    weigt_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
+    weight_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
     depth_limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
     
     #Score
@@ -128,14 +76,14 @@ def init_game():
     steps_count = 0
     font = pygame.font.SysFont(None, 36)
 
-    #valores provisorios
+    #valores provisorios bottles
     x_start = 100
     y_start = 100
     bottle_width = 60
     bottle_height = 200
     spacing = 40
 
-    #tela de vitoria
+    #Win Screeen - isto não devia estar aqui
     font_big = pygame.font.SysFont(None, 64)
     font_small = pygame.font.SysFont(None, 32)
     puzzle_solved = False
@@ -143,16 +91,13 @@ def init_game():
     animation_time = 0
     confetti = Confetti()
 
-    #game setup
+    #Game Setup - confirmar se é tudo resetado sempre
     current_difficulty = "easy"
     game_state = generate_puzzle(current_difficulty, seed=42)
-
     running = True
     selected_bottle = None
     bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
     puzzle_stuck=False
-    
-    #Computer Mode
     solution_path = []
     solving = False
     current_move = 0
@@ -160,21 +105,16 @@ def init_game():
     heuristic = None
     current_puzzle = game_state
 
-    #animating = False # para ter animações das bootles, if false desenhar bottles no estado autual
-    #animation_data = None
-
-    #Meter todas as checkboxs aqui pre defenidas e cria las abaixo
-
-
     while running:
         
+        #Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False      
 
-            if event.type == pygame.MOUSEBUTTONDOWN and not solving: # se calhar mudar a mecanica para selecionar a garrafa e so aceitar quando acertar e se quero desistir de usar essa garrafa, clicar na mesma + ter algumacoisa a mostrar isso                
+            if event.type == pygame.MOUSEBUTTONDOWN and not solving: 
                 for bottle in bottles:
-                    if bottle.handle_click(event):         # usa o método da classe
+                    if bottle.handle_click(event):         
                         if selected_bottle is None:
                             selected_bottle = bottle.index
                         elif selected_bottle == bottle.index:
@@ -198,6 +138,7 @@ def init_game():
             if btn_generate.is_clicked(event):
                 current_difficulty = selector.selected
                 game_state = generate_puzzle(current_difficulty)
+                current_puzzle = game_state
                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                 start_time = time.time()
                 steps_count = 0
@@ -208,6 +149,7 @@ def init_game():
                 puzzle_solved = False
                 final_time = None
                 puzzle_stuck=False
+                animation_time = 0
 
             if btm_prev_move.is_clicked(event) and solving and current_move > 0:
                 current_move -= 1
@@ -232,34 +174,10 @@ def init_game():
                 puzzle_solved = False
                 final_time = None
                 puzzle_stuck=False
+                animation_time = 0
             
-            if hint_btn.is_clicked(event) and not solving:
-                algorithm = algorithms_dropdown.selected
-                func = algorithms_map[algorithm]
-
-                heuristic = heuristics_dropdown.selected
-                heuristic_func = heuristics_map.get(heuristic)
-
-                if algorithm == "A*" or algorithm == "Greedy":
-                    sol = solve(func, game_state, heuristic_func)
-                elif algorithm == "Weighted A*":
-                    sol = solve(func, game_state, heuristic_func=heuristic_func, weight=int(weigt_input.text or 2)) #deviamos por mandatory
-                elif algorithm == "DLS" or algorithm == "IDS":
-                    sol = solve(func, game_state, depth_limit=int(depth_limit_input.text or 10)) #deviamos por mandatory
-                else:
-                    sol = solve(func, game_state)
-
-                """elif algorithm == "Bidirectional":
-                    #temos q fazer uma func nova
-                else: """
-
-                solution_path = solution(sol) 
-                game_state = solution_path[1] if len(solution_path) > 1 else game_state
-                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-
             algorithms_dropdown.handle_click(event)
-            algorithm = algorithms_dropdown.selected 
-            
+            algorithm = algorithms_dropdown.selected  
 
             if algorithm in ["A*", "Greedy", "Weighted A*"]:
                 heuristics_dropdown.handle_click(event)
@@ -268,34 +186,36 @@ def init_game():
                 depth_limit_input.handle_event(event)
 
             if algorithm == "Weighted A*":
-                weigt_input.handle_event(event)
+                weight_input.handle_event(event)
 
-            if solve_button.is_clicked(event):
-                algorithm = algorithms_dropdown.selected
+            heuristic = heuristics_dropdown.selected
+
+            if hint_btn.is_clicked(event) and not solving:
                 func = algorithms_map[algorithm]
-
-                heuristic = heuristics_dropdown.selected
                 heuristic_func = heuristics_map.get(heuristic)
 
-                if algorithm == "A*" or algorithm == "Greedy":
-                    sol = solve(func, game_state, heuristic_func)
-                elif algorithm == "Weighted A*":
-                    sol = solve(func, game_state, heuristic_func=heuristic_func, weight=int(weigt_input.text or 2)) #deviamos por mandatory
-                elif algorithm == "DLS" or algorithm == "IDS":
-                    sol = solve(func, game_state, depth_limit=int(depth_limit_input.text or 10)) #deviamos por mandatory
+                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_limit_input)
+
+                if sol is not None:
+                    solution_path = solution(sol) 
+                    game_state = solution_path[1] if len(solution_path) > 1 else game_state
+                    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                 else:
-                    sol = solve(func, game_state)
+                    puzzle_stuck = True
 
-                """elif algorithm == "Bidirectional":
-                    #temos q fazer uma func nova
-                else: """
+            if solve_button.is_clicked(event):
+                func = algorithms_map[algorithm]
+                heuristic_func = heuristics_map.get(heuristic)
 
-                solution_path = solution(sol) 
-                solving = True
+                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_limit_input)
 
-        # if animating:
-            #fazer animaçoes
+                if(sol is not None):
+                    solution_path = solution(sol)
+                    solving = True
+                else:
+                    puzzle_stuck = True
 
+        #Draw
         screen.fill((30, 30, 30)) #?
 
         jump_offset = 0
@@ -306,12 +226,17 @@ def init_game():
             
             if final_time is None:
                 final_time = 0
-            elapsed_time = final_time 
             score = calculate_score(steps_count,final_time,current_difficulty)
-            draw_win_screen(screen,font_big,font_small,steps_count,elapsed_time,score,confetti)
+            elapsed_time = final_time
+            text = f"Time: {elapsed_time}s   Steps: {steps_count}"
+            draw_win_screen(screen,font_big,font_small,steps_count,final_time,score,confetti)
+        elif not puzzle_solved:
+            elapsed_time = int(time.time() - start_time)
+            text = f"Time: {elapsed_time}s   Steps: {steps_count}"
 
         draw_bottles(screen, game_state, bottles, selected_bottle,jump_offset)
 
+        #Always draw
         draw_panel(screen, panel_x)
         return_btn.draw(screen)
 
@@ -325,29 +250,21 @@ def init_game():
                 depth_limit_input.draw(screen)
         
             if algorithm == "Weighted A*":
-                weigt_input.draw(screen)
+                weight_input.draw(screen)
 
             if algorithm in ["A*", "Greedy", "Weighted A*"]:
                 heuristics_dropdown.draw(screen)
 
-            algorithms_dropdown.draw(screen)
+            algorithms_dropdown.draw(screen) 
 
-            
-
-        #falta os restantes diferes de algoritmos
-        
-        if solving:
+            text_surface = font.render(text, True, (255, 255, 255))
+            screen.blit(text_surface, (20, 20))
+        elif solving:
             btn_next_move.draw(screen)
             btm_prev_move.draw(screen)
 
-        elapsed_time = int(time.time() - start_time)
-        text = f"Time: {elapsed_time}s   Steps: {steps_count}"
-        if not solving:
-            text_surface = font.render(text, True, (255, 255, 255))
-            screen.blit(text_surface, (20, 20))
 
-
-        if puzzle_stuck:
+        if puzzle_stuck: #melhorar maybe 
             stuck_text = font_big.render("No moves possible!",True,(255,80,80))
             screen.blit(stuck_text,stuck_text.get_rect(center=(SCREEN_W//2, 80)))
             
