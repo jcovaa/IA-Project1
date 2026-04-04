@@ -77,7 +77,6 @@ def pour(game_state, bottle1, bottle2):
 
    return GameState(new_bottles, game_state.capacity, game_state.color_map), 1
 
-
 def game_states(game_state):
    new_states = []
    for i in range(len(game_state.bottles)):
@@ -102,3 +101,83 @@ def goal_state(game_state):
       if len(set(bottle)) != 1:
          return False
    return True
+
+def solution(node):
+    path = []
+    current = node
+    while current:
+        path.append(current.state)
+        current = current.parent
+
+    return list(reversed(path))
+
+def solve(func, state, *args, **kwargs):
+
+	goal = func(state, goal_state, game_states,  *args, **kwargs) 
+    
+	return goal
+
+def has_possible_moves(state): #rever ciclo in finito
+    bottles = state.bottles
+    capacity = state.capacity
+
+    for i, source in enumerate(bottles):
+        if len(source) == 0:
+            return True
+      
+        top_color = source[-1]
+        # contar quantos blocos da mesma cor estão no topo
+        same_color_count = 1
+        for color in reversed(source[:-1]):
+            if color == top_color:
+                same_color_count += 1
+            else:
+                break
+            
+        for j, target in enumerate(bottles):
+            if i == j:
+                continue
+            # destino cheio
+            if len(target) == capacity:
+                continue
+            # destino vazio - sempre possível mover
+            if len(target) == 0:
+                return True
+            # cor do topo tem de coincidir
+            if target[-1] != top_color:
+                continue
+            # verificar espaço disponível
+            space_available = capacity - len(target)
+            if space_available >= same_color_count :
+                return True
+
+    return False
+
+def run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_input):
+    if algorithm in ("A*", "Greedy"):
+        return solve(func, game_state, heuristic_func)
+    elif algorithm == "Weighted A*":
+        return solve(func, game_state, heuristic_func=heuristic_func, weight=int(weight_input.text or 2))
+    elif algorithm in ("DLS", "IDS"):
+        return solve(func, game_state, depth_limit=int(depth_input.text or 10))
+    return solve(func, game_state)
+
+    """elif algorithm == "Bidirectional":
+                    #temos q fazer uma func nova
+                else: """
+
+def calculate_score(steps, time_elapsed, difficulty):
+
+    difficulty_multiplier = {
+        "easy": 1,
+        "medium": 1.5,
+        "hard": 2
+    }
+
+    base_score = 1000
+
+    score = base_score \
+        - (steps * 15) \
+        - (time_elapsed * 2)
+
+    return int(score * difficulty_multiplier[difficulty])

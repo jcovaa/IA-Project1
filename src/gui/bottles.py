@@ -32,10 +32,15 @@ def get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spaci
         bottles.append(Bottle(game_state.bottles[i],x, y, bottle_width, bottle_height, game_state.capacity, i))
     return bottles
 
-def draw_bottles(screen, game_state, bottles, selected_bottle=None):
+def draw_bottles(screen, game_state, bottles, selected_bottle=None,jump_offset=0):
 
     for b in bottles:
         is_selected = (b.index == selected_bottle)
+        #so aplica quando puzzle completo
+        original_y = b.y
+        b.y = original_y - jump_offset
         b.draw(screen, game_state, COLOR_RGB, is_selected)
+        #restaura posiçao
+        b.y = original_y
 
 

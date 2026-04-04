@@ -1,4 +1,7 @@
 import pygame
+import random
+
+SCREEN_W, SCREEN_H = 1280, 720
 
 class Button:
 
@@ -86,3 +89,118 @@ class Bottle:
          if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
                return True
       return False
+   
+class Dropdown:
+   def __init__(self, x, y, width, height, options, selected_index=0):
+      self.rect = pygame.Rect(x, y, width, height)
+      self.options = options
+      self.selected_index = selected_index
+      self.open = False
+      self.font = pygame.font.SysFont("Arial", 18)
+
+   def draw(self, screen):
+      pygame.draw.rect(screen, (60, 60, 60), self.rect)
+      pygame.draw.rect(screen, (150, 150, 150), self.rect, 2)
+      label = self.font.render(self.options[self.selected_index], True, (255, 255, 255))
+      screen.blit(label, label.get_rect(center=self.rect.center))
+
+      if self.open:
+         for i, option in enumerate(self.options):
+               option_rect = pygame.Rect(self.rect.x, self.rect.y + (i+1)*self.rect.height, self.rect.width, self.rect.height)
+               pygame.draw.rect(screen, (80, 80, 80), option_rect)
+               pygame.draw.rect(screen, (150, 150, 150), option_rect, 2)
+               label = self.font.render(option, True, (255, 255, 255))
+               screen.blit(label, label.get_rect(center=option_rect.center))
+
+   def handle_click(self, event):
+      if event.type == pygame.MOUSEBUTTONDOWN:
+         if self.rect.collidepoint(event.pos):
+               self.open = not self.open
+               return True
+         if self.open:
+               for i, option in enumerate(self.options):
+                  option_rect = pygame.Rect(self.rect.x, self.rect.y + (i+1)*self.rect.height, self.rect.width, self.rect.height)
+                  if option_rect.collidepoint(event.pos):
+                     self.selected_index = i
+                     self.open = False
+                     return True
+               self.open = False
+      return False
+
+   @property
+   def selected(self):
+      return self.options[self.selected_index]
+
+class InputBox:
+    def __init__(self, x, y, w, h, placeholder='', font_size=18):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color_inactive = (60, 60, 60)
+        self.color_active = (100, 180, 250)
+        self.color = self.color_inactive
+        self.text = ''
+        self.placeholder = placeholder
+        self.font = pygame.font.SysFont("Arial", font_size)
+        self.active = False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+            else:
+                self.active = False
+            self.color = self.color_active if self.active else self.color_inactive
+
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_RETURN:
+                value = self.text
+                self.text = ''
+                return value
+            elif event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            elif event.unicode.isdigit():
+                self.text += event.unicode
+
+        return None
+
+    def draw(self, screen):
+        if self.text:
+            txt_surface = self.font.render(self.text, True, (255, 255, 255))
+        else:
+            txt_surface = self.font.render(self.placeholder, True, (130, 130, 130))
+        
+        screen.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        pygame.draw.rect(screen, self.color, self.rect, 2)
+
+
+class Confetti:
+    def __init__(self):
+        self.particles = []
+        for _ in range(120):
+            self.particles.append({
+                "x": random.randint(0, SCREEN_W),
+                "y": random.randint(-SCREEN_H, 0),
+                "speed": random.uniform(2, 5),
+                "size": random.randint(4, 8),
+                "color": random.choice([
+                    (255,50,50),
+                    (50,255,50),
+                    (50,50,255),
+                    (255,255,50),
+                    (255,50,255),
+                    (50,255,255)
+                ])
+            })
+
+    def update(self):
+        for p in self.particles:
+            p["y"] += p["speed"]
+            if p["y"] > SCREEN_H:
+                p["y"] = random.randint(-50, -10)
+
+    def draw(self, screen):
+        for p in self.particles:
+            pygame.draw.rect(
+                screen,
+                p["color"],
+                (p["x"], p["y"], p["size"], p["size"])
+            )
