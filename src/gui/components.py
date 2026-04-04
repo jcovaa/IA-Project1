@@ -1,4 +1,5 @@
 import pygame
+import random
 
 class Button:
 
@@ -167,3 +168,40 @@ class InputBox:
         
         screen.blit(txt_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(screen, self.color, self.rect, 2)
+
+
+# confettis
+SCREEN_W, SCREEN_H = 1280, 720
+
+class Confetti:
+    def __init__(self):
+        self.particles = []
+        for _ in range(120):
+            self.particles.append({
+                "x": random.randint(0, SCREEN_W),
+                "y": random.randint(-SCREEN_H, 0),
+                "speed": random.uniform(2, 5),
+                "size": random.randint(4, 8),
+                "color": random.choice([
+                    (255,50,50),
+                    (50,255,50),
+                    (50,50,255),
+                    (255,255,50),
+                    (255,50,255),
+                    (50,255,255)
+                ])
+            })
+
+    def update(self):
+        for p in self.particles:
+            p["y"] += p["speed"]
+            if p["y"] > SCREEN_H:
+                p["y"] = random.randint(-50, -10)
+
+    def draw(self, screen):
+        for p in self.particles:
+            pygame.draw.rect(
+                screen,
+                p["color"],
+                (p["x"], p["y"], p["size"], p["size"])
+            )

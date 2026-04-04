@@ -1,10 +1,10 @@
 import pygame
-from .components import Button, DifficultySelector, Dropdown, InputBox
+from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
 from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves
 import time
 from src.puzzle_generator import generate_puzzle
-import random, math
+import math
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -297,11 +297,18 @@ def init_game():
             #fazer animaçoes
 
         screen.fill((30, 30, 30)) #?
+
         jump_offset = 0
-        #animating bottles
         if puzzle_solved:
+            #animating bottles
             animation_time += 0.08
             jump_offset = int(abs(math.sin(animation_time)) * 12)
+            
+            if final_time is None:
+                final_time = 0
+            elapsed_time = final_time 
+            score = calculate_score(steps_count,final_time,current_difficulty)
+            draw_win_screen(screen,font_big,font_small,steps_count,elapsed_time,score,confetti)
 
         draw_bottles(screen, game_state, bottles, selected_bottle,jump_offset)
 
@@ -339,62 +346,13 @@ def init_game():
             text_surface = font.render(text, True, (255, 255, 255))
             screen.blit(text_surface, (20, 20))
 
-        if puzzle_solved:
-            if final_time is None:
-                final_time = 0
-            elapsed_time = final_time if puzzle_solved else int(time.time() - start_time) 
-            score = calculate_score(steps_count,final_time,current_difficulty)
-            draw_win_screen(screen,font_big,font_small,steps_count,elapsed_time,score,confetti)
 
         if puzzle_stuck:
-            stuck_text = font_big.render(
-                "No moves possible!",
-                True,
-                (255,80,80)
-            )
-            screen.blit(
-                stuck_text,
-                stuck_text.get_rect(center=(SCREEN_W//2, 80))
-            )
+            stuck_text = font_big.render("No moves possible!",True,(255,80,80))
+            screen.blit(stuck_text,stuck_text.get_rect(center=(SCREEN_W//2, 80)))
             
         pygame.display.flip()
 
         clock.tick(60)  # limits FPS to 60
 
     pygame.quit()
-
-
-
-# confettis
-class Confetti:
-    def __init__(self):
-        self.particles = []
-        for _ in range(120):
-            self.particles.append({
-                "x": random.randint(0, SCREEN_W),
-                "y": random.randint(-SCREEN_H, 0),
-                "speed": random.uniform(2, 5),
-                "size": random.randint(4, 8),
-                "color": random.choice([
-                    (255,50,50),
-                    (50,255,50),
-                    (50,50,255),
-                    (255,255,50),
-                    (255,50,255),
-                    (50,255,255)
-                ])
-            })
-
-    def update(self):
-        for p in self.particles:
-            p["y"] += p["speed"]
-            if p["y"] > SCREEN_H:
-                p["y"] = random.randint(-50, -10)
-
-    def draw(self, screen):
-        for p in self.particles:
-            pygame.draw.rect(
-                screen,
-                p["color"],
-                (p["x"], p["y"], p["size"], p["size"])
-            )

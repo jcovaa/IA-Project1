@@ -118,17 +118,14 @@ def solve(func, state, *args, **kwargs):
 	return goal
 
 def has_possible_moves(state):
-
     bottles = state.bottles
     capacity = state.capacity
 
     for i, source in enumerate(bottles):
-
         if len(source) == 0:
             return True
-
+      
         top_color = source[-1]
-
         # contar quantos blocos da mesma cor estão no topo
         same_color_count = 1
         for color in reversed(source[:-1]):
@@ -136,27 +133,21 @@ def has_possible_moves(state):
                 same_color_count += 1
             else:
                 break
-
+            
         for j, target in enumerate(bottles):
-
             if i == j:
                 continue
-
             # destino cheio
             if len(target) == capacity:
                 continue
-
-            # destino vazio → sempre possível mover
+            # destino vazio - sempre possível mover
             if len(target) == 0:
                 return True
-
             # cor do topo tem de coincidir
             if target[-1] != top_color:
                 continue
-
             # verificar espaço disponível
             space_available = capacity - len(target)
-
             if space_available >= same_color_count :
                 return True
 
