@@ -172,7 +172,6 @@ def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func
 
    return None
 
-#not tested
 def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuristic_func, weight):
     root = TreeNode(initial_state)
     queue = [(root, heuristic_func(root.state) * weight)]
@@ -235,45 +234,6 @@ def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_
         if new_threshold == float('inf'):
             return None
         threshold = new_threshold
-
-# not tested
-def bidirectional_search(initial_state, goal_state, operators_func):
-   if initial_state == goal_state:
-      return TreeNode(initial_state)
-
-   front_queue = deque([TreeNode(initial_state)])
-   back_queue = deque([TreeNode(goal_state)])
-
-   front_visited = {TreeNode(initial_state)}
-   back_visited = {TreeNode(goal_state)}
-
-   while front_queue and back_queue:
-      
-      node = front_queue.popleft()
-
-      for state, _ in operators_func(node.state):
-         if state not in front_visited:
-               tree = TreeNode(state)
-               node.add_child(tree)
-               front_visited.add(tree)
-               front_queue.append(tree)
-
-         if state in back_visited:
-               return front_visited[state] 
-
-      node = back_queue.popleft()
-
-      for state, _ in operators_func(node.state):
-         if state not in back_visited:
-               tree = TreeNode(state)
-               node.add_child(tree)
-               back_visited[state] = tree
-               back_queue.append(tree)
-
-         if state in front_visited:
-               return front_visited[state] 
-
-   return None
 
 
 def heuristic1(state):

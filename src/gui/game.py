@@ -15,7 +15,6 @@ from src.search.algorithms import (
     greedy_search,
     a_star_search,
     weighted_a_star_search,
-    bidirectional_search,
     heuristic1,
     heuristic2,
     heuristic3,
@@ -33,7 +32,6 @@ algorithms_map = {
     "Greedy": greedy_search,
     "A*": a_star_search,
     "Weighted A*": weighted_a_star_search,
-    "Bidirectional": bidirectional_search
 } # atualizar
 
 #melhorar nomes
@@ -60,8 +58,8 @@ def init_game():
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
     btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo 
-    algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
-    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 45, heuristics)
+    algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 40, algorithms)
+    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 40, heuristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
     return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
     hint_btn = Button(x=panel_x + 20, y=550, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
