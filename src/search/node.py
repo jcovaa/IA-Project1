@@ -5,6 +5,9 @@ class TreeNode:
       self.parent = parent
       self.children = []
       self.cost = 0  # the path cost to get to this state
+      self.f = 0
+      self.depth = 0
+      self.forgotten_children = {}
 
    def add_child(self, child_node, operator_cost=0):
       self.children.append(child_node)
