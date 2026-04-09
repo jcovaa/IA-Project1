@@ -287,6 +287,10 @@ def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_
             return None, stats
         threshold = new_threshold
 
+        if stats["states_visited"] > MAX_STATES:
+            return None, stats
+        
+
 def sma_star_search(initial_state, goal_state_func, operators_func, heuristic, limit):
     root = TreeNode(initial_state)
     root.cost = 0
