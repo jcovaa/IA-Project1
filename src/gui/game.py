@@ -1,11 +1,15 @@
 import pygame
+import os
+import queue
+import threading
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves, run_solver, calculate_score
+from src.game.gameState import pour, solution, goal_state, has_possible_moves, run_solver, calculate_score
 import time
 from src.puzzle_generator import generate_puzzle
 import math
 from .draw import draw_panel, draw_win_screen
+from src.benchmark import benchmark
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -15,6 +19,8 @@ from src.search.algorithms import (
     greedy_search,
     a_star_search,
     weighted_a_star_search,
+    iterative_deepening_a_star_search,
+    sma_star_search,
     heuristic1,
     heuristic2,
     heuristic3,
@@ -32,6 +38,8 @@ algorithms_map = {
     "Greedy": greedy_search,
     "A*": a_star_search,
     "Weighted A*": weighted_a_star_search,
+    "ISA*": iterative_deepening_a_star_search,
+    "SMA*": sma_star_search,
 } # atualizar
 
 #melhorar nomes
@@ -66,7 +74,8 @@ def init_game():
     btn_next_move = Button(x=panel_x + 110, y=20, width=80, height=80, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
     btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
     weight_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
-    depth_limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
+    limit_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Limit")
+    benchmark_btn = Button(x=panel_x + 20, y=500, width=160, height=45, text="Benchmark", color=(100, 100, 200), hover_color=(120, 120, 220))
     
     #valores provisorios bottles - por macro
     x_start = 100
@@ -106,6 +115,13 @@ def init_game():
     final_time = None
     steps_count = 0
     font = pygame.font.SysFont(None, 36) #nao devia estar aqui
+    #Benchmark
+    benchmark_status_font = pygame.font.SysFont(None, 24)
+    benchmark_running = False
+    benchmark_status = ""
+    benchmark_status_color = (210, 210, 210)
+    benchmark_events = queue.Queue()
+    benchmark_count = 1
 
     while running:
         
@@ -180,10 +196,8 @@ def init_game():
                     event_consumed = True
                 algorithm = algorithms_dropdown.selected  
 
-
-            if algorithm in ["A*", "Greedy", "Weighted A*"] and not event_consumed:
-                if heuristics_dropdown.handle_click(event):
-                    event_consumed = True
+            if algorithm in ["A*", "Greedy", "Weighted A*", "ISA*", "SMA*"] and not event_consumed:
+                heuristics_dropdown.handle_click(event)
 
             if algorithm in ["DLS", "IDS"] and not event_consumed:
                 if depth_limit_input.handle_event(event):
@@ -199,8 +213,8 @@ def init_game():
             if hint_btn.is_clicked(event) and not solving and not event_consumed:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
-            
-                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_limit_input)
+
+                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
 
                 if sol is not None:
                     solution_path = solution(sol) 
@@ -219,7 +233,7 @@ def init_game():
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
-                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_limit_input)
+                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
 
                 if(sol is not None):
                     solution_path = solution(sol)
@@ -242,6 +256,37 @@ def init_game():
                 puzzle_stuck=False
                 animation_time = 0
                 event_consumed = True
+
+            if benchmark_btn.is_clicked(event) and not benchmark_running and not solving:
+                benchmark_running = True
+                benchmark_difficulty = selector.selected
+                benchmark_btn.text = "Running..."
+                benchmark_status = f"Benchmark running ({benchmark_difficulty})"
+                benchmark_status_color = (220, 220, 120)
+
+                output_path = os.path.join("doc", f"benchmark_{benchmark_difficulty}_{benchmark_count}.csv")
+                benchmark_count += 1
+
+                def run_benchmark_task():
+                    try:
+                        results = benchmark(difficulty=benchmark_difficulty, seed=42, output_file=output_path)
+                        solved_count = sum(1 for row in results if row.get("solved"))
+                        total_count = len(results)
+                        benchmark_events.put((
+                            "success",
+                            f"Done: {solved_count}/{total_count} solved. Saved in {output_path}"
+                        ))
+                    except Exception as exc:
+                        benchmark_events.put(("error", f"Benchmark failed: {exc}"))
+
+                threading.Thread(target=run_benchmark_task, daemon=True).start()
+
+        while not benchmark_events.empty():
+            status, message = benchmark_events.get_nowait()
+            benchmark_running = False
+            benchmark_btn.text = "Benchmark"
+            benchmark_status = message
+            benchmark_status_color = (120, 220, 120) if status == "success" else (220, 120, 120)
 
         #Draw
         screen.fill((30, 30, 30))
@@ -275,14 +320,19 @@ def init_game():
             hint_btn.draw(screen)
             selector.draw(screen)
             btn_generate.draw(screen)
+            benchmark_btn.draw(screen)
+
+            if benchmark_status:
+                benchmark_surface = benchmark_status_font.render(benchmark_status, True, benchmark_status_color)
+                screen.blit(benchmark_surface, (20, SCREEN_H - 30))
             
-            if algorithm in ["DLS", "IDS"]:
-                depth_limit_input.draw(screen)
+            if algorithm in ["DLS", "IDS", "SMA*"]:
+                limit_input.draw(screen)
         
             if algorithm == "Weighted A*":
                 weight_input.draw(screen)
 
-            if algorithm in ["A*", "Greedy", "Weighted A*"]:
+            if algorithm in ["A*", "Greedy", "Weighted A*", "ISA*", "SMA*"]:
                 heuristics_dropdown.draw(screen)
 
             algorithms_dropdown.draw(screen) 
