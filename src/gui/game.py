@@ -200,7 +200,7 @@ def init_game():
                 heuristics_dropdown.handle_click(event)
 
             if algorithm in ["DLS", "IDS"] and not event_consumed:
-                if depth_limit_input.handle_event(event):
+                if limit_input.handle_event(event):
                     event_consumed = True
 
             if algorithm == "Weighted A*" and not event_consumed:
