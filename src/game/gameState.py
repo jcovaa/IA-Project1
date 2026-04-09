@@ -163,7 +163,7 @@ def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input
       except ValueError:
          return default
 
-   if algorithm in ("A*", "Greedy"):
+   if algorithm in ("A*", "Greedy", "ISA*"):
       return solve(func, game_state, heuristic=heuristic)
    elif algorithm == "Weighted A*":
       weight = parse_int_or_default(weight_input.text, 2)
@@ -171,6 +171,9 @@ def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input
    elif algorithm in ("DLS", "IDS"):
       limit = parse_int_or_default(limit_input.text, 10)
       return solve(func, game_state, limit=limit)
+   elif algorithm == "SMA*":
+      limit = parse_int_or_default(limit_input.text, 10000)
+      return solve(func, game_state, heuristic=heuristic, limit=limit)
    return solve(func, game_state)
 
 def calculate_score(steps, time_elapsed, difficulty):

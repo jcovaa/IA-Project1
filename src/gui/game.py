@@ -4,7 +4,7 @@ import queue
 import threading
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves, run_solver, calculate_score
+from src.game.gameState import pour, solution, goal_state, has_possible_moves, run_solver, calculate_score
 import time
 from src.puzzle_generator import generate_puzzle
 import math
@@ -19,6 +19,8 @@ from src.search.algorithms import (
     greedy_search,
     a_star_search,
     weighted_a_star_search,
+    iterative_deepening_a_star_search,
+    sma_star_search,
     bidirectional_search,
     heuristic1,
     heuristic2,
@@ -37,6 +39,8 @@ algorithms_map = {
     "Greedy": greedy_search,
     "A*": a_star_search,
     "Weighted A*": weighted_a_star_search,
+    "ISA*": iterative_deepening_a_star_search,
+    "SMA*": sma_star_search,
     "Bidirectional": bidirectional_search
 } # atualizar
 
@@ -72,7 +76,7 @@ def init_game():
     btn_next_move = Button(x=panel_x + 110, y=20, width=80, height=80, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
     btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
     weight_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
-    limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
+    limit_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Limit")
     benchmark_btn = Button(x=panel_x + 20, y=500, width=160, height=45, text="Benchmark", color=(100, 100, 200), hover_color=(120, 120, 220))
     
     #valores provisorios bottles - por macro
@@ -197,10 +201,10 @@ def init_game():
             algorithms_dropdown.handle_click(event)
             algorithm = algorithms_dropdown.selected  
 
-            if algorithm in ["A*", "Greedy", "Weighted A*"]:
+            if algorithm in ["A*", "Greedy", "Weighted A*", "ISA*", "SMA*"]:
                 heuristics_dropdown.handle_click(event)
 
-            if algorithm in ["DLS", "IDS"]:
+            if algorithm in ["DLS", "IDS", "SMA*"]:
                 limit_input.handle_event(event)
 
             if algorithm == "Weighted A*":
@@ -306,13 +310,13 @@ def init_game():
                 benchmark_surface = benchmark_status_font.render(benchmark_status, True, benchmark_status_color)
                 screen.blit(benchmark_surface, (20, SCREEN_H - 30))
             
-            if algorithm in ["DLS", "IDS"]:
+            if algorithm in ["DLS", "IDS", "SMA*"]:
                 limit_input.draw(screen)
         
             if algorithm == "Weighted A*":
                 weight_input.draw(screen)
 
-            if algorithm in ["A*", "Greedy", "Weighted A*"]:
+            if algorithm in ["A*", "Greedy", "Weighted A*", "ISA*", "SMA*"]:
                 heuristics_dropdown.draw(screen)
 
             algorithms_dropdown.draw(screen) 
