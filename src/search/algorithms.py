@@ -327,8 +327,10 @@ def sma_star_search(initial_state, goal_state_func, operators_func, heuristic, l
             heapq.heappush(heap, (child.f, id(child), child))
             in_memory[id(child)] = child
 
-    return None, stats
+        if stats["states_visited"] > MAX_STATES:
+            return None, stats
 
+    return None, stats
 
 def sma_forget_worst(heap, in_memory):
     worst_id = None
