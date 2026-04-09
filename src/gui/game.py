@@ -1,4 +1,7 @@
 import pygame
+import os
+import queue
+import threading
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
 from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves, run_solver, calculate_score
@@ -6,6 +9,7 @@ import time
 from src.puzzle_generator import generate_puzzle
 import math
 from .draw import draw_panel, draw_win_screen
+from src.benchmark import benchmark
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -69,6 +73,7 @@ def init_game():
     btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
     weight_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
     limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
+    benchmark_btn = Button(x=panel_x + 20, y=500, width=160, height=45, text="Benchmark", color=(100, 100, 200), hover_color=(120, 120, 220))
     
     #valores provisorios bottles - por macro
     x_start = 100
@@ -108,6 +113,13 @@ def init_game():
     final_time = None
     steps_count = 0
     font = pygame.font.SysFont(None, 36) #nao devia estar aqui
+    #Benchmark
+    benchmark_status_font = pygame.font.SysFont(None, 24)
+    benchmark_running = False
+    benchmark_status = ""
+    benchmark_status_color = (210, 210, 210)
+    benchmark_events = queue.Queue()
+    benchmark_count = 1
 
     while running:
         
@@ -225,6 +237,37 @@ def init_game():
                 else:
                     puzzle_stuck = True
 
+            if benchmark_btn.is_clicked(event) and not benchmark_running and not solving:
+                benchmark_running = True
+                benchmark_difficulty = selector.selected
+                benchmark_btn.text = "Running..."
+                benchmark_status = f"Benchmark running ({benchmark_difficulty})"
+                benchmark_status_color = (220, 220, 120)
+
+                output_path = os.path.join("doc", f"benchmark_{benchmark_difficulty}_{benchmark_count}.csv")
+                benchmark_count += 1
+
+                def run_benchmark_task():
+                    try:
+                        results = benchmark(difficulty=benchmark_difficulty, seed=42, output_file=output_path)
+                        solved_count = sum(1 for row in results if row.get("solved"))
+                        total_count = len(results)
+                        benchmark_events.put((
+                            "success",
+                            f"Done: {solved_count}/{total_count} solved. Saved in {output_path}"
+                        ))
+                    except Exception as exc:
+                        benchmark_events.put(("error", f"Benchmark failed: {exc}"))
+
+                threading.Thread(target=run_benchmark_task, daemon=True).start()
+
+        while not benchmark_events.empty():
+            status, message = benchmark_events.get_nowait()
+            benchmark_running = False
+            benchmark_btn.text = "Benchmark"
+            benchmark_status = message
+            benchmark_status_color = (120, 220, 120) if status == "success" else (220, 120, 120)
+
         #Draw
         screen.fill((30, 30, 30))
 
@@ -257,6 +300,11 @@ def init_game():
             hint_btn.draw(screen)
             selector.draw(screen)
             btn_generate.draw(screen)
+            benchmark_btn.draw(screen)
+
+            if benchmark_status:
+                benchmark_surface = benchmark_status_font.render(benchmark_status, True, benchmark_status_color)
+                screen.blit(benchmark_surface, (20, SCREEN_H - 30))
             
             if algorithm in ["DLS", "IDS"]:
                 limit_input.draw(screen)

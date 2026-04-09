@@ -128,7 +128,7 @@ def benchmark(difficulty="easy", seed=42, output_file=None):
         results.append(row)
 
         if "error" in row:
-            print(f"{row['algorif "erroithm']:<20} ERROR: {row['error']}")
+            print(f"{row['algorithm']:<20} ERROR: {row['error']}")
             continue
 
         print(
