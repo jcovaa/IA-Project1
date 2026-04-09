@@ -221,40 +221,40 @@ def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuri
     return None, stats
 
 
+def ida_star_auxiliary(node, g, threshold, path_visited, stats, goal_state_func, operators_func, heuristic):
+    f = g + heuristic(node.state)
+    if f > threshold:
+        return None, f
+    if goal_state_func(node.state):
+        return node, f
+
+    stats["states_visited"] += 1
+    min_threshold = float("inf")
+
+    for state, step_cost in operators_func(node.state):
+        if state in path_visited:
+            continue
+
+        child = TreeNode(state, node)
+        node.add_child(child, operator_cost=step_cost)
+        path_visited.add(state)
+        result, new_f = ida_star_auxiliary(child, g + step_cost, threshold, path_visited, stats, goal_state_func, operators_func, heuristic)
+        path_visited.remove(state)
+        if result:
+            return result, new_f
+        min_threshold = min(min_threshold, new_f)
+
+    return None, min_threshold
+
+
 def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_func, heuristic):
     stats = {"states_visited": 0}
-
-    def search(node, g, threshold, path_visited):
-        f = g + heuristic(node.state)
-        if f > threshold:
-            return None, f
-        if goal_state_func(node.state):
-            return node, f
-
-        stats["states_visited"] += 1
-        min_threshold = float("inf")
-
-        for state, step_cost in operators_func(node.state):
-            if state in path_visited:
-                continue
-
-            child = TreeNode(state, node)
-            node.add_child(child, operator_cost=step_cost)
-            path_visited.add(state)
-            result, new_f = search(child, g + step_cost, threshold, path_visited)
-            path_visited.remove(state)
-            if result:
-                return result, new_f
-            min_threshold = min(min_threshold, new_f)
-
-        return None, min_threshold
-
     root = TreeNode(initial_state)
     threshold = heuristic(root.state)
 
     while True:
         path_visited = {initial_state}
-        result, new_threshold = search(root, 0, threshold, path_visited)
+        result, new_threshold = ida_star_auxiliary(root, 0, threshold, path_visited, stats, goal_state_func, operators_func, heuristic)
         if result:
             return result, stats
         if new_threshold == float("inf"):
