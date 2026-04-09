@@ -3,7 +3,6 @@ import heapq
 from collections import deque
 from .node import TreeNode
 
-
 def breadth_first_search(initial_state, goal_state_func, operators_func):
     root = TreeNode(initial_state)  # create the root node in the search tree
     queue = deque([root])  # initialize the queue to store the nodes
@@ -23,7 +22,7 @@ def breadth_first_search(initial_state, goal_state_func, operators_func):
 
         for state, _ in operators_func(node.state):  # go through next states
         # create tree node with the new state
-            state_node = TreeNode(state)
+            state_node = TreeNode(state, node)
 
             # link child node to its parent in the tree
             node.add_child(state_node, operator_cost=1)
@@ -61,11 +60,11 @@ def depth_first_search(initial_state, goal_state_func, operators_func):
 
 def depth_limited_search(initial_state, goal_state_func, operators_func, limit):
     root = TreeNode(initial_state)
-    stack = [(root, 0)]
+    stack = [(root, 0, {initial_state})] #aumenta muito a memoria, mas evita ciclos, rever
     stats = {"states_visited": 0, "cutoff": False}
 
     while stack:
-        node, depth = stack.pop()
+        node, depth, path_visited = stack.pop()
 
         if goal_state_func(node.state):
             return node, stats
@@ -75,9 +74,11 @@ def depth_limited_search(initial_state, goal_state_func, operators_func, limit):
 
         if depth < limit:
             for state, _ in operators_func(node.state):
+                if state in path_visited:
+                    continue
                 state_node = TreeNode(state)
                 node.add_child(state_node, operator_cost=1)
-                stack.append((state_node, depth + 1))
+                stack.append((state_node, depth + 1, path_visited | {state}))
         else:
             stats["cutoff"] = True
 

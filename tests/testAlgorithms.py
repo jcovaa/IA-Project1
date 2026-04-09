@@ -87,7 +87,7 @@ class TestAlgorithms(unittest.TestCase):
          self.initial_state,
          self.goal_state_func,
          self.operators_func,
-         heuristic_func=lambda state: 0,
+         heuristic=lambda state: 0,
          weight=2,
       )
       self.assertIsNotNone(result)

@@ -68,7 +68,7 @@ def init_game():
     btn_next_move = Button(x=panel_x + 110, y=20, width=80, height=80, text=">", color=(50, 180, 50), hover_color=(70, 210, 70)) 
     btm_prev_move = Button(x=panel_x + 20, y=20, width=80, height=80, text="<", color=(50, 180, 50), hover_color=(70, 210, 70))
     weight_input = InputBox(panel_x + 20, 400, 160, 45, placeholder="Weight")
-    depth_limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
+    limit_input = InputBox(panel_x + 20, 350, 160, 45, placeholder="Limit")
     
     #valores provisorios bottles - por macro
     x_start = 100
@@ -189,7 +189,7 @@ def init_game():
                 heuristics_dropdown.handle_click(event)
 
             if algorithm in ["DLS", "IDS"]:
-                depth_limit_input.handle_event(event)
+                limit_input.handle_event(event)
 
             if algorithm == "Weighted A*":
                 weight_input.handle_event(event)
@@ -200,7 +200,7 @@ def init_game():
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
-                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_limit_input)
+                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
 
                 if sol is not None:
                     solution_path = solution(sol) 
@@ -217,7 +217,7 @@ def init_game():
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
-                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_limit_input)
+                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
 
                 if(sol is not None):
                     solution_path = solution(sol)
@@ -259,7 +259,7 @@ def init_game():
             btn_generate.draw(screen)
             
             if algorithm in ["DLS", "IDS"]:
-                depth_limit_input.draw(screen)
+                limit_input.draw(screen)
         
             if algorithm == "Weighted A*":
                 weight_input.draw(screen)
