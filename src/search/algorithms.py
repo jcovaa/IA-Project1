@@ -287,6 +287,11 @@ def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_
             return False, stats
         
 
+import heapq
+import time
+
+MAX_TIME = 30  # segundos
+
 def sma_star_search(initial_state, goal_state_func, operators_func, start, heuristic, limit):
     root = TreeNode(initial_state)
     root.cost = 0
@@ -299,6 +304,9 @@ def sma_star_search(initial_state, goal_state_func, operators_func, start, heuri
 
     while heap:
         _, _, node = heapq.heappop(heap)
+
+        if id(node) not in in_memory:
+            continue
 
         if goal_state_func(node.state):
             return node, stats
@@ -319,15 +327,17 @@ def sma_star_search(initial_state, goal_state_func, operators_func, start, heuri
             node.add_child(child, operator_cost=step_cost)
 
             while len(in_memory) >= limit:
-                sma_forget_worst(heap, in_memory)
+                if not sma_forget_worst(heap, in_memory):
+                    break
 
             heapq.heappush(heap, (child.f, id(child), child))
             in_memory[id(child)] = child
-        
+            
         if time.time() - start > MAX_TIME:
             return False, stats
 
     return None, stats
+
 
 def sma_forget_worst(heap, in_memory):
     worst_id = None
@@ -335,7 +345,7 @@ def sma_forget_worst(heap, in_memory):
     worst_depth = -1
 
     for nid, node in in_memory.items():
-        if node.children:
+        if any(id(c) in in_memory for c in node.children):
             continue
         if node.f > worst_f or (node.f == worst_f and node.depth < worst_depth):
             worst_f = node.f
@@ -343,23 +353,25 @@ def sma_forget_worst(heap, in_memory):
             worst_depth = node.depth
 
     if worst_id is None:
-        return
+        return False
 
     worst = in_memory.pop(worst_id)
 
     if worst.parent is not None:
-        worst.parent.forgotten_children[worst.state] = worst.f
-        worst.parent.children = [c for c in worst.parent.children if id(c) != worst_id]
-
-        all_fs = [c.f for c in worst.parent.children] + list(worst.parent.forgotten_children.values())
+        parent = worst.parent
+        parent.forgotten_children[worst.state] = worst.f
+        parent.children = [c for c in parent.children if id(c) != worst_id]
+        all_fs = (
+            [c.f for c in parent.children] +
+            list(parent.forgotten_children.values())
+        )
         if all_fs:
-            worst.parent.f = min(all_fs)
+            parent.f = min(all_fs)
+        parent_id = id(parent)
+        heapq.heappush(heap, (parent.f, parent_id, parent))
+        in_memory[parent_id] = parent
 
-        parent_id = id(worst.parent)
-        in_memory_ids = {nid for _, nid, _ in heap}
-        if parent_id not in in_memory_ids:
-            heapq.heappush(heap, (worst.parent.f, parent_id, worst.parent))
-            in_memory[parent_id] = worst.parent
+    return True
 
 def heuristic1(state):
     score = 0
