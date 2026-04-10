@@ -156,13 +156,6 @@ def has_possible_moves(state): #rever ciclo in finito
     return False
 
 def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input):
-   def parse_int_or_default(value, default):
-      try:
-         text = (value or "").strip()
-         return int(text) if text else default
-      except ValueError:
-         return default
-
    if algorithm in ("A*", "Greedy", "ISA*"):
       return solve(func, game_state, heuristic=heuristic)
    elif algorithm == "Weighted A*":
@@ -176,6 +169,13 @@ def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input
       return solve(func, game_state, heuristic=heuristic, limit=limit)
    return solve(func, game_state)
 
+def parse_int_or_default(value, default):
+      try:
+         text = (value or "").strip()
+         return int(text) if text else default
+      except ValueError:
+         return default
+      
 def calculate_score(steps, time_elapsed, difficulty):
 
     difficulty_multiplier = {

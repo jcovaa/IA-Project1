@@ -21,7 +21,6 @@ from src.search.algorithms import (
     weighted_a_star_search,
     iterative_deepening_a_star_search,
     sma_star_search,
-    bidirectional_search,
     heuristic1,
     heuristic2,
     heuristic3,
@@ -41,7 +40,6 @@ algorithms_map = {
     "Weighted A*": weighted_a_star_search,
     "ISA*": iterative_deepening_a_star_search,
     "SMA*": sma_star_search,
-    "Bidirectional": bidirectional_search
 } # atualizar
 
 #melhorar nomes
@@ -68,8 +66,8 @@ def init_game():
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
     btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo 
-    algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 45, algorithms)
-    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 45, heuristics)
+    algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 40, algorithms)
+    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 40, heuristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
     return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
     hint_btn = Button(x=panel_x + 20, y=550, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
@@ -130,8 +128,11 @@ def init_game():
         #Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False      
+                running = False    
 
+            event_consumed = False #for overriding events in dropdowns and buttons
+
+            #bottles
             if event.type == pygame.MOUSEBUTTONDOWN and not solving: 
                 for bottle in bottles:
                     if bottle.handle_click(event):         
@@ -152,9 +153,11 @@ def init_game():
                                     puzzle_stuck = True
                             selected_bottle = None
                         break
-
+            
+            #difficulty
             selector.handle_click(event)
 
+            #button generate
             if btn_generate.is_clicked(event):
                 current_difficulty = selector.selected
                 game_state = generate_puzzle(current_difficulty)
@@ -170,7 +173,8 @@ def init_game():
                 final_time = None
                 puzzle_stuck=False
                 animation_time = 0
-
+        
+            #Buttons for computer mode
             if btm_prev_move.is_clicked(event) and solving and current_move > 0:
                 current_move -= 1
                 game_state = solution_path[current_move]
@@ -185,34 +189,28 @@ def init_game():
                     final_time = int(time.time() - start_time)
                     steps_count = len(solution_path) - 1
 
-            if return_btn.is_clicked(event):
-                solving = False
-                solution_path = []
-                current_move = 0
-                game_state = current_puzzle
-                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-                start_time = time.time()
-                steps_count = 0
-                puzzle_solved = False
-                final_time = None
-                puzzle_stuck=False
-                animation_time = 0
             
-            algorithms_dropdown.handle_click(event)
-            algorithm = algorithms_dropdown.selected  
+            #Dropdown algorithm and heuristic selection
+            if not event_consumed:
+                if algorithms_dropdown.handle_click(event):
+                    event_consumed = True
+                algorithm = algorithms_dropdown.selected  
 
-            if algorithm in ["A*", "Greedy", "Weighted A*", "ISA*", "SMA*"]:
+            if algorithm in ["A*", "Greedy", "Weighted A*", "ISA*", "SMA*"] and not event_consumed:
                 heuristics_dropdown.handle_click(event)
 
-            if algorithm in ["DLS", "IDS", "SMA*"]:
-                limit_input.handle_event(event)
+            if algorithm in ["DLS", "IDS"] and not event_consumed:
+                if limit_input.handle_event(event):
+                    event_consumed = True
 
-            if algorithm == "Weighted A*":
-                weight_input.handle_event(event)
+            if algorithm == "Weighted A*" and not event_consumed:
+                if weight_input.handle_event(event):
+                    event_consumed = True
 
             heuristic = heuristics_dropdown.selected
-
-            if hint_btn.is_clicked(event) and not solving:
+            
+            #Hint button
+            if hint_btn.is_clicked(event) and not solving and not event_consumed:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
@@ -228,8 +226,10 @@ def init_game():
                         steps_count = len(solution_path) - 1
                 else:
                     puzzle_stuck = True
+                event_consumed = True
 
-            if solve_button.is_clicked(event):
+            #Solve button
+            if solve_button.is_clicked(event) and not event_consumed:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
@@ -240,6 +240,22 @@ def init_game():
                     solving = True
                 else:
                     puzzle_stuck = True
+                event_consumed = True
+
+            #Return button
+            if return_btn.is_clicked(event) and not event_consumed:
+                solving = False
+                solution_path = []
+                current_move = 0
+                game_state = current_puzzle
+                bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                start_time = time.time()
+                steps_count = 0
+                puzzle_solved = False
+                final_time = None
+                puzzle_stuck=False
+                animation_time = 0
+                event_consumed = True
 
             if benchmark_btn.is_clicked(event) and not benchmark_running and not solving:
                 benchmark_running = True

@@ -287,6 +287,10 @@ def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_
             return None, stats
         threshold = new_threshold
 
+        if stats["states_visited"] > MAX_STATES:
+            return None, stats
+        
+
 def sma_star_search(initial_state, goal_state_func, operators_func, heuristic, limit):
     root = TreeNode(initial_state)
     root.cost = 0
@@ -360,49 +364,6 @@ def sma_forget_worst(heap, in_memory):
         if parent_id not in in_memory_ids:
             heapq.heappush(heap, (worst.parent.f, parent_id, worst.parent))
             in_memory[parent_id] = worst.parent
-
-
-# not tested
-def bidirectional_search(initial_state, goal_state, operators_func):
-    if initial_state == goal_state:
-        return TreeNode(initial_state), {"states_visited": 0}
-
-    front_queue = deque([TreeNode(initial_state)])
-    back_queue = deque([TreeNode(goal_state)])
-
-    front_visited = {TreeNode(initial_state)}
-    back_visited = {TreeNode(goal_state)}
-
-    stats = {"states_visited": 0}
-
-    while front_queue and back_queue:
-        node = front_queue.popleft()
-        stats["states_visited"] += 1
-
-        for state, _ in operators_func(node.state):
-            if state not in front_visited:
-                tree = TreeNode(state)
-                node.add_child(tree)
-                front_visited.add(tree)
-                front_queue.append(tree)
-
-            if state in back_visited:
-                return front_visited[state]
-
-        node = back_queue.popleft()
-
-        for state, _ in operators_func(node.state):
-            if state not in back_visited:
-                tree = TreeNode(state)
-                node.add_child(tree)
-                back_visited[state] = tree
-                back_queue.append(tree)
-
-            if state in front_visited:
-                return front_visited[state]
-
-    return None, stats
-
 
 def heuristic1(state):
     score = 0

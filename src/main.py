@@ -1,5 +1,6 @@
 from src.gui.game import init_game
-
+import sys
+sys.setrecursionlimit(100000)
 
 #def calc_time
 
