@@ -164,10 +164,10 @@ def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input
       weight = parse_int_or_default(weight_input.text, 2)
       return solve(func, game_state, heuristic=heuristic, weight=weight)
    elif algorithm in ("DLS", "IDS"):
-      limit = parse_int_or_default(limit_input.text, 10)
+      limit = parse_int_or_default(limit_input.text, 2)
       return solve(func, game_state, limit=limit)
    elif algorithm == "SMA*":
-      limit = parse_int_or_default(limit_input.text, 10000)
+      limit = parse_int_or_default(limit_input.text, 100000)
       return solve(func, game_state, heuristic=heuristic, limit=limit)
    return solve(func, game_state)
 

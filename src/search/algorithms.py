@@ -286,7 +286,6 @@ def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_
         if time.time() - start > MAX_TIME:
             return False, stats
         
-
 import heapq
 import time
 
@@ -326,13 +325,20 @@ def sma_star_search(initial_state, goal_state_func, operators_func, start, heuri
             child.forgotten_children = {}
             node.add_child(child, operator_cost=step_cost)
 
+            freed = True
             while len(in_memory) >= limit:
                 if not sma_forget_worst(heap, in_memory):
+                    freed = False
                     break
+
+            if not freed:
+                node.children.remove(child)
+                node.forgotten_children[state] = f
+                continue
 
             heapq.heappush(heap, (child.f, id(child), child))
             in_memory[id(child)] = child
-            
+
         if time.time() - start > MAX_TIME:
             return False, stats
 
