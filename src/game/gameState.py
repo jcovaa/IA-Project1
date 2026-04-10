@@ -10,6 +10,7 @@ bottles = [
 Capacity defined as the maximum number of colors a bottle can hold. For example:
 capacity = 3
 '''
+import time
 
 class GameState:
    def __init__(self, bottles, capacity, color_map=None):
@@ -112,7 +113,8 @@ def solution(node):
     return list(reversed(path))
 
 def solve(func, state, *args, **kwargs):
-   result = func(state, goal_state, game_states, *args, **kwargs)
+   start = time.time()
+   result = func(state, goal_state, game_states, start, *args, **kwargs)
 
    # Search functions return (goal_node, stats); GUI only needs the node.
    if isinstance(result, tuple):

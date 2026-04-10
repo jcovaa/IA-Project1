@@ -20,7 +20,7 @@ class Button:
         label = self.font.render(self.text, True, (255, 255, 255))
         screen.blit(label, label.get_rect(center=self.rect.center))
 
-    def is_clicked(self, event):
+    def handle_click(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
    
 
