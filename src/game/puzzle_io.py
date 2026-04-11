@@ -23,6 +23,44 @@ def load_puzzle(filename):
    return GameState(bottles, capacity)
 
 
+def load_level_file(filename):
+   with open(filename, 'r', encoding='utf-8') as f:
+      lines = [line.strip() for line in f if line.strip()]
+
+   if not lines:
+      raise ValueError('Empty level file')
+
+   bottles_count = int(lines[0])
+   bottle_lines = lines[1:1 + bottles_count]
+   if len(bottle_lines) != bottles_count:
+      raise ValueError('Invalid level format')
+
+   color_to_id = {}
+   bottles = []
+   capacity = 0
+
+   for raw in bottle_lines:
+      if raw.upper() == 'EMPTY':
+         bottles.append([])
+         continue
+
+      color_names = [c.strip().lower() for c in raw.split(',') if c.strip()]
+      bottle = []
+      for name in color_names:
+         if name not in color_to_id:
+            color_to_id[name] = len(color_to_id) + 1
+         bottle.append(color_to_id[name])
+
+      capacity = max(capacity, len(bottle))
+      bottles.append(bottle)
+
+   if capacity == 0:
+      raise ValueError('Level has no colored bottles')
+
+   color_map = {idx: name for name, idx in color_to_id.items()}
+   return GameState(bottles, capacity, color_map=color_map)
+
+
 def save_solver_results(result_data, filename):
    with open(filename, 'w') as f:
       f.write("=== Water Sort Solver Result ===\n")

@@ -16,11 +16,12 @@ def solution_length(node):
 def run_solver_with_metrics(func, game_state, goal_state_func, operators_func, solver_kwargs):
    tracemalloc.start()
    start = time.perf_counter()
+   search_start = time.time()
    result = None
    error = None
 
    try:
-      result = func(game_state, goal_state_func, operators_func, **solver_kwargs)
+      result = func(game_state, goal_state_func, operators_func, search_start, **solver_kwargs)
    except Exception as exc:
       error = exc
    finally:
