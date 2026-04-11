@@ -123,6 +123,10 @@ def init_game():
     benchmark_status_color = (210, 210, 210)
     benchmark_events = queue.Queue()
     benchmark_count = 1
+    #threading
+    solver_result_queue = queue.Queue()
+    solving_algo = False
+    cancel_event = threading.Event()
 
     while running:
         
@@ -174,6 +178,15 @@ def init_game():
                 final_time = None
                 puzzle_stuck=False
                 animation_time = 0
+                solving_algo = False
+                solve_button.loading = False
+                hint_btn.loading = False
+                timeout = False
+                cancel_event.set()
+                cancel_event.clear()
+                while not solver_result_queue.empty():
+                    try: solver_result_queue.get_nowait()
+                    except: pass
         
             #Buttons for computer mode
             if btm_prev_move.handle_click(event) and solving and current_move > 0:
@@ -211,43 +224,37 @@ def init_game():
             heuristic = heuristics_dropdown.selected
             
             #Hint button
-            if hint_btn.handle_click(event) and not solving and not event_consumed:
+            if hint_btn.handle_click(event) and not solving and not event_consumed and not solving_algo and not puzzle_solved:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
+                hint_btn.loading = True
+                solving_algo = True
 
-                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
+                def run_hint_task():
+                    sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
+                    if not cancel_event.is_set():
+                        solver_result_queue.put((sol,True))
 
-                if sol is False:
-                    timeout = True
-                elif sol is None:
-                    puzzle_stuck = True
-                else:
-                    solution_path = solution(sol) 
-                    game_state = solution_path[1] if len(solution_path) > 1 else game_state
-                    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-                    if goal_state(game_state):          
-                        puzzle_solved = True
-                        final_time = int(time.time() - start_time)
-                        steps_count = len(solution_path) - 1
+                threading.Thread(target=run_hint_task, daemon=True).start()
+
                 event_consumed = True
 
             #Solve button
-            if solve_button.handle_click(event) and not event_consumed:
+            if solve_button.handle_click(event) and not event_consumed and not solving and not puzzle_solved and not solving_algo:
                 timeout = False
                 puzzle_stuck = False
+                solving_algo = True
+                solve_button.loading = True
                 
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
-                sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
+                def run_solve_task():
+                    sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
+                    if not cancel_event.is_set():
+                        solver_result_queue.put((sol, False))
 
-                if sol is False:
-                    timeout = True
-                elif sol is None:
-                    puzzle_stuck = True
-                else:
-                    solution_path = solution(sol)
-                    solving = True
+                threading.Thread(target=run_solve_task, daemon=True).start()
                 event_consumed = True
 
             #Return button
@@ -265,8 +272,18 @@ def init_game():
                 timeout = False
                 animation_time = 0
                 event_consumed = True
+                solving_algo = False
+                solve_button.loading = False
+                hint_btn.loading = False
 
-            if benchmark_btn.handle_click(event) and not benchmark_running and not solving and not event_consumed:
+                cancel_event.set()
+                cancel_event.clear()
+                while not solver_result_queue.empty():
+                    try: solver_result_queue.get_nowait()
+                    except: pass
+                
+
+            if benchmark_btn.handle_click(event) and not benchmark_running and not solving and not event_consumed and not solving_algo:
                 benchmark_running = True
                 benchmark_difficulty = selector.selected
                 benchmark_btn.text = "Running..."
@@ -292,6 +309,30 @@ def init_game():
                 event_consumed = True
 
                 threading.Thread(target=run_benchmark_task, daemon=True).start()
+
+
+        while not solver_result_queue.empty():
+            sol, is_hint = solver_result_queue.get_nowait()
+            solving_algo = False
+            solve_button.loading = False
+            hint_btn.loading = False
+
+
+            if sol is False:
+                timeout = True
+            elif sol is None:
+                puzzle_stuck = True
+            else:
+                solution_path = solution(sol)
+                if is_hint:
+                    game_state = solution_path[1] if len(solution_path) > 1 else game_state
+                    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                    if goal_state(game_state):
+                        puzzle_solved = True
+                        final_time = int(time.time() - start_time)
+                        steps_count = len(solution_path) - 1
+                else:
+                    solving = True
 
         while not benchmark_events.empty():
             status, message = benchmark_events.get_nowait()
@@ -357,8 +398,8 @@ def init_game():
             screen.blit(stuck_text,stuck_text.get_rect(center=(SCREEN_W//2, 80)))
 
         if timeout:
-            timeout = font_big.render("Timeout!",True,(255,80,80))
-            screen.blit(timeout,timeout.get_rect(center=(SCREEN_W//2, 80)))
+            timeout_text = font_big.render("Timeout!",True,(255,80,80))
+            screen.blit(timeout_text,timeout_text.get_rect(center=(SCREEN_W//2, 80)))
             
         pygame.display.flip()
 

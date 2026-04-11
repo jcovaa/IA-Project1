@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 
 SCREEN_W, SCREEN_H = 1280, 720
 
@@ -11,16 +12,26 @@ class Button:
         self.color = color
         self.hover_color = hover_color
         self.font = pygame.font.SysFont("Arial", 18)
+        self.loading = False
+        self._spinner_chars = ["◐", "◓", "◑", "◒"]
 
     def draw(self, screen):
         mouse = pygame.mouse.get_pos()
-        color = self.hover_color if self.rect.collidepoint(mouse) else self.color
+        color = self.hover_color if self.rect.collidepoint(mouse) and not self.loading else self.color
         pygame.draw.rect(screen, color, self.rect, border_radius=8)
         pygame.draw.rect(screen, (200, 200, 200), self.rect, 2, border_radius=8)
-        label = self.font.render(self.text, True, (255, 255, 255))
+
+        if self.loading:
+            spinner = self._spinner_chars[int(time.time() * 6) % 4]
+            label = self.font.render(f"{spinner}", True, (255, 255, 255))
+        else:
+            label = self.font.render(self.text, True, (255, 255, 255))
+
         screen.blit(label, label.get_rect(center=self.rect.center))
 
     def handle_click(self, event):
+        if self.loading:
+            return False
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
    
 
