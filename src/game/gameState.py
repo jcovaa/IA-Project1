@@ -10,6 +10,7 @@ bottles = [
 Capacity defined as the maximum number of colors a bottle can hold. For example:
 capacity = 3
 '''
+import time
 
 class GameState:
    def __init__(self, bottles, capacity, color_map=None):
@@ -112,7 +113,8 @@ def solution(node):
     return list(reversed(path))
 
 def solve(func, state, *args, **kwargs):
-   result = func(state, goal_state, game_states, *args, **kwargs)
+   start = time.time()
+   result = func(state, goal_state, game_states, start, *args, **kwargs)
 
    # Search functions return (goal_node, stats); GUI only needs the node.
    if isinstance(result, tuple):
@@ -156,17 +158,14 @@ def has_possible_moves(state): #rever ciclo in finito
     return False
 
 def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input):
-   if algorithm in ("A*", "Greedy", "ISA*"):
+   if algorithm in ("A*", "Greedy", "IDA*"):
       return solve(func, game_state, heuristic=heuristic)
    elif algorithm == "Weighted A*":
       weight = parse_int_or_default(weight_input.text, 2)
       return solve(func, game_state, heuristic=heuristic, weight=weight)
    elif algorithm in ("DLS", "IDS"):
-      limit = parse_int_or_default(limit_input.text, 10)
+      limit = parse_int_or_default(limit_input.text, 50)
       return solve(func, game_state, limit=limit)
-   elif algorithm == "SMA*":
-      limit = parse_int_or_default(limit_input.text, 10000)
-      return solve(func, game_state, heuristic=heuristic, limit=limit)
    return solve(func, game_state)
 
 def parse_int_or_default(value, default):

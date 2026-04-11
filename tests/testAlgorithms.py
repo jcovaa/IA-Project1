@@ -37,7 +37,7 @@ class TestAlgorithms(unittest.TestCase):
          self.initial_state,
          self.goal_state_func,
          self.operators_func,
-         depth_limit=5,
+         limit=5,
       )
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
@@ -48,7 +48,7 @@ class TestAlgorithms(unittest.TestCase):
          self.initial_state,
          self.goal_state_func,
          self.operators_func,
-         depth_limit=5,
+         limit=5,
       )
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
@@ -65,7 +65,7 @@ class TestAlgorithms(unittest.TestCase):
          self.initial_state,
          self.goal_state_func,
          self.operators_func,
-         heuristic_func=lambda state: 0,
+         heuristic=lambda state: 0,
       )
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
@@ -76,7 +76,7 @@ class TestAlgorithms(unittest.TestCase):
          self.initial_state,
          self.goal_state_func,
          self.operators_func,
-         heuristic_func=lambda state: 0,
+         heuristic=lambda state: 0,
       )
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
@@ -99,7 +99,7 @@ class TestAlgorithms(unittest.TestCase):
          self.initial_state,
          self.goal_state_func,
          self.operators_func,
-         heuristic_func=lambda state: 0,
+         heuristic=lambda state: 0,
       )
       self.assertIsNotNone(result)
       self.assertEqual(result.state, self.goal_state)
