@@ -162,18 +162,103 @@ def run_solver(func, algorithm, game_state, heuristic_func, weight_input, depth_
          return solve(func, game_state, depth_limit=int(depth_input.text or 10))
       return solve(func, game_state)
 
-def calculate_score(steps, time_elapsed, difficulty):
+def calculate_score(steps, time_elapsed, steps_ai, hint_count):
+    base_score = 500
+    
+    if time_elapsed <= 0:
+        time_elapsed = 1
 
-    difficulty_multiplier = {
-        "easy": 1,
-        "medium": 1.5,
-        "hard": 2
+    if steps <= 0:
+        steps = 1
+
+    score = base_score*(steps_ai/steps)+base_score*((steps_ai*(1+steps_ai*0.02))/time_elapsed) - hint_count*100
+
+    return int(score)
+
+from src.search.algorithms import (
+    greedy_search,
+    a_star_search,
+    weighted_a_star_search,
+    heuristic1,
+    heuristic2,
+    heuristic3,
+    heuristic4
+)
+
+import multiprocessing as mp
+
+def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func, is_weighted):
+    try:
+        if is_weighted:
+            sol = solve(
+                algo_func,
+                state,
+                heuristic_func=h_func,
+                weight=2
+            )
+        else:
+            sol = solve(
+                algo_func,
+                state,
+                h_func
+            )
+
+        if sol is None:
+            queue.put(None)
+            return
+
+        path = solution(sol)
+        steps = len(path) - 1
+        queue.put(steps)
+
+    except:
+        queue.put(None)
+
+
+def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
+
+    heuristic_algorithms = {
+        "Greedy": greedy_search,
     }
 
-    base_score = 1000
+    heuristics_map = {
+        "Heuristic 1": heuristic1,
+        "Heuristic 2": heuristic2,
+        "Heuristic 3": heuristic3,
+        "Heuristic 4": heuristic4
+    }
 
-    score = base_score \
-        - (steps * 15) \
-        - (time_elapsed * 2)
+    best_algo = None
+    best_heuristic = None
+    best_steps = float("inf")
 
-    return int(score * difficulty_multiplier[difficulty])
+    for algo_name, algo_func in heuristic_algorithms.items():
+
+        for h_name, h_func in heuristics_map.items():
+
+            queue = mp.Queue()
+            p = mp.Process(
+                target=run_solver_choose_best_heuristic_algorithm,
+                args=(queue, algo_func, state, h_func, algo_name == "Weighted A*")
+            )
+
+            p.start()
+            p.join(timeout=time_limit_per_run)
+
+            if p.is_alive():
+                p.terminate()
+                p.join()
+                continue  # passou do tempo → ignora
+
+            if not queue.empty():
+                steps = queue.get()
+                print(f"name: {algo_name}:{h_name}:{steps}")
+                if steps is None:
+                    continue
+
+                if steps < best_steps:
+                    best_steps = steps
+                    best_algo = algo_name
+                    best_heuristic = h_name
+
+    return best_algo, best_heuristic, best_steps

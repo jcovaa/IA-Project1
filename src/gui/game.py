@@ -1,11 +1,12 @@
 import pygame
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves, run_solver, calculate_score
+from src.game.gameState import pour, solve, solution, goal_state, has_possible_moves, run_solver, calculate_score, choose_best_heuristic_algorithm
 import time
 from src.puzzle_generator import generate_puzzle
 import math
 from .draw import draw_panel, draw_win_screen
+import threading
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -106,6 +107,8 @@ def init_game():
     final_time = None
     steps_count = 0
     font = pygame.font.SysFont(None, 36) #nao devia estar aqui
+    best_result = choose_best_heuristic_algorithm(game_state)
+    hint_count=0
 
     while running:
         
@@ -157,6 +160,18 @@ def init_game():
                 final_time = None
                 puzzle_stuck=False
                 animation_time = 0
+                hint_count=0
+
+                computing_best = True
+                state_copy = game_state
+                def worker():
+                    global best_result, computing_best
+                    best_result = choose_best_heuristic_algorithm(state_copy)
+                    computing_best = False
+                    print(f"{best_result[0]}:{best_result[1]}:{best_result[2]}")
+
+                threading.Thread(target=worker).start()
+                
         
             #Buttons for computer mode
             if btm_prev_move.is_clicked(event) and solving and current_move > 0:
@@ -204,12 +219,14 @@ def init_game():
 
                 if sol is not None:
                     solution_path = solution(sol) 
-                    game_state = solution_path[1] if len(solution_path) > 1 else game_state
+                    if len(solution_path) > 1:
+                        game_state = solution_path[1]
+                        steps_count += 1 
+                        hint_count += 1
                     bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                     if goal_state(game_state):          
                         puzzle_solved = True
                         final_time = int(time.time() - start_time)
-                        steps_count = len(solution_path) - 1
                 else:
                     puzzle_stuck = True
                 event_consumed = True
@@ -242,6 +259,7 @@ def init_game():
                 puzzle_stuck=False
                 animation_time = 0
                 event_consumed = True
+                hint_count=0
 
         #Draw
         screen.fill((30, 30, 30))
@@ -251,10 +269,10 @@ def init_game():
             #animating bottles
             animation_time += 0.08
             jump_offset = int(abs(math.sin(animation_time)) * 12)
-            
+  
             if final_time is None:
                 final_time = 0
-            score = calculate_score(steps_count,final_time,current_difficulty)
+            score = calculate_score(steps_count,final_time,best_result[2],hint_count)
             elapsed_time = final_time
             text = f"Time: {elapsed_time}s   Steps: {steps_count}"
             draw_win_screen(screen,font_big,font_small,steps_count,final_time,score,confetti)
