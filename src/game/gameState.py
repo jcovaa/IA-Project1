@@ -157,13 +157,13 @@ def has_possible_moves(state): #rever ciclo in finito
 
 def run_solver(func, algorithm, game_state, heuristic, weight_input, limit_input):
    if algorithm in ("A*", "Greedy", "ISA*"):
-      return solve(func, game_state, heuristic=heuristic)
+      return solve(func, game_state, heuristic_func=heuristic)
    elif algorithm == "Weighted A*":
       weight = parse_int_or_default(weight_input.text, 2)
       return solve(func, game_state, heuristic=heuristic, weight=weight)
    elif algorithm in ("DLS", "IDS"):
       limit = parse_int_or_default(limit_input.text, 10)
-      return solve(func, game_state, limit=limit)
+      return solve(func, game_state, depth_limit=limit)
    elif algorithm == "SMA*":
       limit = parse_int_or_default(limit_input.text, 10000)
       return solve(func, game_state, heuristic=heuristic, limit=limit)

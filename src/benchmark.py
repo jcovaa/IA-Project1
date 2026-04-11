@@ -17,30 +17,30 @@ from src.search.algorithms import (
 UNIFORMED = [
     ("BFS", breadth_first_search, {}),
     ("DFS", depth_first_search, {}),
-    ("DLS", depth_limited_search, {"limit": 50}),
-    ("IDS", iterative_deepening_search, {"limit": 50}),
+    ("DLS", depth_limited_search, {"depth_limit": 50}),
+    ("IDS", iterative_deepening_search, {"depth_limit": 50}),
     ("UCS", uniform_cost_search, {})
 ]
 
 # Algorithms that need a heuristic
 INFORMED = [
-    ("Greedy_H1", greedy_search, {"heuristic": heuristic1}),
-    ("Greedy_H2", greedy_search, {"heuristic": heuristic2}),    
-    ("Greedy_H3", greedy_search, {"heuristic": heuristic3}),
-    ("Greedy_H4", greedy_search, {"heuristic": heuristic4}),
-    ("A*_H1", a_star_search, {"heuristic": heuristic1}),
-    ("A*_H2", a_star_search, {"heuristic": heuristic2}),
-    ("A*_H3", a_star_search, {"heuristic": heuristic3}),
-    ("A*_H4", a_star_search, {"heuristic": heuristic4}),
+    ("Greedy_H1", greedy_search, {"heuristic_func": heuristic1}),
+    ("Greedy_H2", greedy_search, {"heuristic_func": heuristic2}),
+    ("Greedy_H3", greedy_search, {"heuristic_func": heuristic3}),
+    ("Greedy_H4", greedy_search, {"heuristic_func": heuristic4}),
+    ("A*_H1", a_star_search, {"heuristic_func": heuristic1}),
+    ("A*_H2", a_star_search, {"heuristic_func": heuristic2}),
+    ("A*_H3", a_star_search, {"heuristic_func": heuristic3}),
+    ("A*_H4", a_star_search, {"heuristic_func": heuristic4}),
     ("WA*_H1(w=1.5)", weighted_a_star_search, {"heuristic": heuristic1, "weight": 1.5}),
     ("WA*_H2(w=1.5)", weighted_a_star_search, {"heuristic": heuristic2, "weight": 1.5}),
     ("WA*_H3(w=1.5)", weighted_a_star_search, {"heuristic": heuristic3, "weight": 1.5}),
     ("WA*_H4(w=1.5)", weighted_a_star_search, {"heuristic": heuristic4, "weight": 1.5}),
     ("WA_H4(w=2)", weighted_a_star_search, {"heuristic": heuristic4, "weight": 2}),
-    ("IDA*_H1", iterative_deepening_a_star_search, {"heuristic": heuristic1}),
-    ("IDA*_H2", iterative_deepening_a_star_search, {"heuristic": heuristic2}),
-    ("IDA*_H3", iterative_deepening_a_star_search, {"heuristic": heuristic3}),
-    ("IDA*_H4", iterative_deepening_a_star_search, {"heuristic": heuristic4})
+    ("IDA*_H1", iterative_deepening_a_star_search, {"heuristic_func": heuristic1}),
+    ("IDA*_H2", iterative_deepening_a_star_search, {"heuristic_func": heuristic2}),
+    ("IDA*_H3", iterative_deepening_a_star_search, {"heuristic_func": heuristic3}),
+    ("IDA*_H4", iterative_deepening_a_star_search, {"heuristic_func": heuristic4})
 ]
 
 # Count steps from root to goal node
