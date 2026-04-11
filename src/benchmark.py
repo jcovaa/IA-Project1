@@ -2,7 +2,7 @@ import csv
 import threading
 from src.puzzle_generator import generate_puzzle
 from src.game.gameState import goal_state, game_states
-from src.game.solver_metrics import build_solver_result, run_solver_with_metrics, solution_length
+from src.game.solver_metrics import build_solver_result, run_solver, solution_length
 from src.search.algorithms import (
     breadth_first_search, depth_first_search,
     depth_limited_search, iterative_deepening_search,
@@ -48,7 +48,7 @@ def run_algorithms(name, func, game_state, kwargs, timeout=60):
 
     def target():
         try:
-            result_container[0] = run_solver_with_metrics(func, game_state, goal_state, game_states, kwargs)
+            result_container[0] = run_solver(func, game_state, goal_state, game_states, kwargs)
         except Exception as e:
             exception_container[0] = e
 

@@ -4,14 +4,14 @@ import queue
 import threading
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solution, goal_state, game_states, has_possible_moves, calculate_score, parse_int_or_default
+from src.game.gameState import pour, solution, goal_state, game_states, has_possible_moves, calculate_score
 import time
 from src.puzzle_generator import generate_puzzle
 import math
 from .draw import draw_panel, draw_win_screen
 from src.benchmark import benchmark
 from src.game.puzzle_io import load_level_file, save_solver_results
-from src.game.solver_metrics import build_solver_result, run_solver_with_metrics
+from src.game.solver_metrics import build_solver_result, run_solver, build_solver
 
 from src.search.algorithms import (
     breadth_first_search,
@@ -53,20 +53,7 @@ heuristics_map = {
 } 
 
 
-def build_solver_kwargs(algorithm, heuristic_func, weight_input, limit_input):
-    if algorithm in ("A*", "Greedy", "IDA*"):
-        return {"heuristic": heuristic_func}
-    if algorithm == "Weighted A*":
-        return {
-            "heuristic": heuristic_func,
-            "weight": parse_int_or_default(weight_input.text, 2)
-        }
-    if algorithm in ("DLS", "IDS"):
-        return {"limit": parse_int_or_default(limit_input.text, 50)}
-    return {}
-
-
-def init_game():
+def game():
 
     # pygame setup 
     pygame.init() #passar para a main
@@ -141,9 +128,14 @@ def init_game():
     benchmark_status_color = (210, 210, 210)
     benchmark_events = queue.Queue()
     benchmark_count = 1
+    #solver results
     last_solver_result = None
     save_status = ""
     save_status_color = (210, 210, 210)
+    #threading
+    solver_result_queue = queue.Queue()
+    solving_algo = False
+    cancel_event = threading.Event()
 
     while running:
         
@@ -197,6 +189,15 @@ def init_game():
                 animation_time = 0
                 last_solver_result = None
                 save_status = ""
+                solving_algo = False
+                solve_button.loading = False
+                hint_btn.loading = False
+                timeout = False
+                cancel_event.set()
+                cancel_event.clear()
+                while not solver_result_queue.empty():
+                    try: solver_result_queue.get_nowait()
+                    except: pass
 
             if btn_load.handle_click(event):
                 current_difficulty = selector.selected
@@ -229,6 +230,14 @@ def init_game():
                     save_status = ""
                     benchmark_status = f"Loaded {current_difficulty} level"
                     benchmark_status_color = (120, 220, 120)
+                    solving_algo = False
+                    solve_button.loading = False
+                    hint_btn.loading = False
+                    cancel_event.set()
+                    cancel_event.clear()
+                    while not solver_result_queue.empty():
+                        try: solver_result_queue.get_nowait()
+                        except: pass
                 event_consumed = True
         
             #Buttons for computer mode
@@ -267,91 +276,46 @@ def init_game():
             heuristic = heuristics_dropdown.selected
             
             #Hint button
-            if hint_btn.handle_click(event) and not solving and not event_consumed and not puzzle_solved:
-                if algorithm is None:
-                    continue
+            if hint_btn.handle_click(event) and not solving and not event_consumed and not puzzle_solved and not puzzle_stuck and not solving_algo:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
-                solver_kwargs = build_solver_kwargs(algorithm, heuristic_func, weight_input, limit_input)
-                sol, _, _, _ = run_solver_with_metrics(func, game_state, goal_state, game_states, solver_kwargs)
+                hint_btn.loading = True
+                solving_algo = True
 
-                if sol is False:
-                    timeout = True
-                elif sol is None:
-                    puzzle_stuck = True
-                else:
-                    hint_path = solution(sol)
-                    if len(hint_path) > 1:
-                        game_state = hint_path[1]
-                        bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
-                    if goal_state(game_state):
-                        puzzle_solved = True
-                        final_time = int(time.time() - start_time)
+                def run_hint_task():
+                    solver_kwargs = build_solver(algorithm, heuristic_func, weight_input, limit_input)
+                    sol, _, _, _ = run_solver(func, game_state, goal_state, game_states, solver_kwargs)
+                    if not cancel_event.is_set():
+                        solver_result_queue.put((sol,True))
+
+                threading.Thread(target=run_hint_task, daemon=True).start()
 
                 event_consumed = True
 
             #Solve button
-            if solve_button.handle_click(event) and not event_consumed and not solving and not puzzle_solved:
-                if algorithm is None:
-                    continue
+            if solve_button.handle_click(event) and not event_consumed and not solving and not puzzle_solved and not puzzle_stuck and not solving_algo:
                 timeout = False
                 puzzle_stuck = False
+                solving_algo = True
+                solve_button.loading = True
+
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
                 heuristic_label = heuristic if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*"] else "N/A"
-                solver_kwargs = build_solver_kwargs(algorithm, heuristic_func, weight_input, limit_input)
                 initial_snapshot = [list(b) for b in game_state.bottles]
-                sol, stats, elapsed, memory_kb = run_solver_with_metrics(func, game_state, goal_state, game_states, solver_kwargs)
 
-                if sol is False:
-                    timeout = True
-                    last_solver_result = build_solver_result(
-                        algorithm=algorithm,
-                        heuristic=heuristic_label,
-                        solved=False,
-                        status="Timeout",
-                        elapsed=elapsed,
-                        memory_kb=memory_kb,
-                        stats=stats,
-                        difficulty=current_difficulty,
-                        initial_state=initial_snapshot,
-                        final_state=[list(b) for b in game_state.bottles],
-                    )
-                elif sol is not None:
-                    solution_path = solution(sol)
-                    solving = True
-                    last_solver_result = build_solver_result(
-                        algorithm=algorithm,
-                        heuristic=heuristic_label,
-                        solved=True,
-                        status="Yes",
-                        elapsed=elapsed,
-                        memory_kb=memory_kb,
-                        stats=stats,
-                        solution_steps=len(solution_path) - 1,
-                        solution_cost=sol.cost,
-                        difficulty=current_difficulty,
-                        initial_state=initial_snapshot,
-                        final_state=[list(b) for b in solution_path[-1].bottles],
-                    )
-                    save_status = ""
-                else:
-                    puzzle_stuck = True
-                    last_solver_result = build_solver_result(
-                        algorithm=algorithm,
-                        heuristic=heuristic_label,
-                        solved=False,
-                        status="Cutoff" if stats.get("cutoff") else "No",
-                        elapsed=elapsed,
-                        memory_kb=memory_kb,
-                        stats=stats,
-                        difficulty=current_difficulty,
-                        initial_state=initial_snapshot,
-                        final_state=[list(b) for b in game_state.bottles],
-                    )
+                def run_solve_task():
+                    
+                    solver_kwargs = build_solver(algorithm, heuristic_func, weight_input, limit_input)
+                    sol, stats, elapsed, memory_kb = run_solver(func, game_state, goal_state, game_states, solver_kwargs)
+                    if not cancel_event.is_set():
+                        solver_result_queue.put((sol, False, stats, elapsed, memory_kb, heuristic_label, initial_snapshot))
+
+                threading.Thread(target=run_solve_task, daemon=True).start()
+
                 event_consumed = True
 
-            if puzzle_solved and save_results_btn.handle_click(event):
+            if save_results_btn.handle_click(event) and puzzle_solved:
                 if last_solver_result and last_solver_result.get("solved"):
                     score = calculate_score(steps_count, final_time or 0, current_difficulty)
                     last_solver_result["score"] = score
@@ -380,9 +344,18 @@ def init_game():
                 animation_time = 0
                 save_status = ""
                 event_consumed = True
+                solving_algo = False
+                solve_button.loading = False
+                hint_btn.loading = False
+
+                cancel_event.set()
+                cancel_event.clear()
+                while not solver_result_queue.empty():
+                    try: solver_result_queue.get_nowait()
+                    except: pass
                 
 
-            if benchmark_btn.handle_click(event) and not benchmark_running and not solving and not event_consumed:
+            if benchmark_btn.handle_click(event) and not benchmark_running and not solving and not event_consumed and not solving_algo:
                 benchmark_running = True
                 benchmark_difficulty = selector.selected
                 benchmark_btn.text = "Running..."
@@ -409,6 +382,61 @@ def init_game():
 
                 threading.Thread(target=run_benchmark_task, daemon=True).start()
 
+
+        while not solver_result_queue.empty():
+            item = solver_result_queue.get_nowait()
+            sol, is_hint = item[0], item[1]
+            solving_algo = False
+            solve_button.loading = False
+            hint_btn.loading = False
+
+            if not is_hint:
+                _, _, stats, elapsed, memory_kb, heuristic_label, initial_snapshot = item
+
+            if sol is False:
+                timeout = True
+                if not is_hint:
+                    last_solver_result = build_solver_result(
+                        algorithm=algorithm, heuristic=heuristic_label,
+                        solved=False, status="Timeout",
+                        elapsed=elapsed, memory_kb=memory_kb, stats=stats,
+                        difficulty=current_difficulty,
+                        initial_state=initial_snapshot,
+                        final_state=[list(b) for b in game_state.bottles],
+                    )
+            elif sol is None:
+                puzzle_stuck = True
+                if not is_hint:
+                    last_solver_result = build_solver_result(
+                        algorithm=algorithm, heuristic=heuristic_label,
+                        solved=False, status="Cutoff" if stats.get("cutoff") else "No",
+                        elapsed=elapsed, memory_kb=memory_kb, stats=stats,
+                        difficulty=current_difficulty,
+                        initial_state=initial_snapshot,
+                        final_state=[list(b) for b in game_state.bottles],
+                    )
+            else:
+                solution_path = solution(sol)
+                if is_hint:
+                    game_state = solution_path[1] if len(solution_path) > 1 else game_state
+                    bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
+                    if goal_state(game_state):
+                        puzzle_solved = True
+                        final_time = int(time.time() - start_time)
+                        steps_count = len(solution_path) - 1
+                else:
+                    solving = True
+                    last_solver_result = build_solver_result(
+                        algorithm=algorithm, heuristic=heuristic_label,
+                        solved=True, status="Yes",
+                        elapsed=elapsed, memory_kb=memory_kb, stats=stats,
+                        solution_steps=len(solution_path) - 1,
+                        solution_cost=sol.cost,
+                        difficulty=current_difficulty,
+                        initial_state=initial_snapshot,
+                        final_state=[list(b) for b in solution_path[-1].bottles],
+                    )
+                    save_status = ""
 
         while not benchmark_events.empty():
             status, message = benchmark_events.get_nowait()
