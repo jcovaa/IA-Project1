@@ -1,9 +1,8 @@
-import time
-import tracemalloc
 import csv
 import threading
 from src.puzzle_generator import generate_puzzle
 from src.game.gameState import goal_state, game_states
+from src.game.solver_metrics import build_solver_result, run_solver_with_metrics, solution_length
 from src.search.algorithms import (
     breadth_first_search, depth_first_search,
     depth_limited_search, iterative_deepening_search,
@@ -43,35 +42,19 @@ INFORMED = [
     ("IDA*_H4", iterative_deepening_a_star_search, {"heuristic_func": heuristic4})
 ]
 
-# Count steps from root to goal node
-def solution_length(node):
-    length, current = 0, node
-    while current.parent:
-        length += 1
-        current = current.parent
-    return length
-
-# Run one algorithm, measure time, memory and solution quality
 def run_algorithms(name, func, game_state, kwargs, timeout=60):
     result_container = [None]
     exception_container = [None]
 
     def target():
         try:
-            result_container[0] = func(game_state, goal_state, game_states, **kwargs)
+            result_container[0] = run_solver_with_metrics(func, game_state, goal_state, game_states, kwargs)
         except Exception as e:
             exception_container[0] = e
-
-    tracemalloc.start()
-    start = time.perf_counter()
 
     thread = threading.Thread(target=target, daemon=True)
     thread.start()
     thread.join(timeout=timeout)
-    
-    elasped = time.perf_counter() - start
-    _, peak_memory = tracemalloc.get_traced_memory()
-    tracemalloc.stop()
 
     if exception_container[0]:
         return {"algorithm": name, "error": str(exception_container[0])}
@@ -82,37 +65,35 @@ def run_algorithms(name, func, game_state, kwargs, timeout=60):
             "solved": False,
             "status": "Timeout",
             "time_s": f">{timeout}s",
-            "memory_kb": round(peak_memory / 1024, 2),
+            "memory_kb": "N/A",
             "states_visited": "N/A",
             "solution_steps": None,
             "solution_cost": None,
             "timed_out": True
         }
     
-    result, stats = result_container[0]
+    result, stats, elapsed, peak_memory = result_container[0]
 
     if result is None:
-        return {
-            "algorithm": name,
-            "solved": False,
-            "status": "Cutoff" if stats.get("cutoff") else "No",
-            "time_s": round(elasped, 4),
-            "memory_kb": round(peak_memory / 1024, 2),
-            "states_visited": stats["states_visited"],
-            "solution_steps": None,
-            "solution_cost": None,
-        }
+        return build_solver_result(
+            algorithm=name,
+            solved=False,
+            status="Cutoff" if stats.get("cutoff") else "No",
+            elapsed=elapsed,
+            memory_kb=peak_memory,
+            stats=stats,
+        )
 
-    return {
-        "algorithm": name,
-        "solved": True,
-        "status": "Yes",
-        "time_s": round(elasped, 4),
-        "memory_kb": round(peak_memory / 1024, 2),
-        "states_visited": stats["states_visited"],
-        "solution_steps": solution_length(result),
-        "solution_cost": result.cost,
-    }
+    return build_solver_result(
+        algorithm=name,
+        solved=True,
+        status="Yes",
+        elapsed=elapsed,
+        memory_kb=peak_memory,
+        stats=stats,
+        solution_steps=solution_length(result),
+        solution_cost=result.cost,
+    )
 
 def benchmark(difficulty="easy", seed=42, output_file=None):
     game_state = generate_puzzle(difficulty, seed=seed)
