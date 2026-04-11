@@ -4,7 +4,7 @@ from collections import deque
 from .node import TreeNode
 import time
 
-MAX_TIME = 10 #definir
+MAX_TIME = 60 #definir
 
 def breadth_first_search(initial_state, goal_state_func, operators_func, start):
     root = TreeNode(initial_state)  # create the root node in the search tree
@@ -68,7 +68,7 @@ def depth_first_search(initial_state, goal_state_func, operators_func, start):
 
 def depth_limited_search(initial_state, goal_state_func, operators_func, start, limit):
     root = TreeNode(initial_state)
-    stack = [(root, 0, {initial_state})] #aumenta muito a memoria, mas evita ciclos, rever
+    stack = [(root, 0, {initial_state})] 
     stats = {"states_visited": 0, "cutoff": False}
 
     while stack:
@@ -285,99 +285,6 @@ def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_
 
         if time.time() - start > MAX_TIME:
             return False, stats
-        
-import heapq
-import time
-
-MAX_TIME = 30  # segundos
-
-def sma_star_search(initial_state, goal_state_func, operators_func, start, heuristic, limit):
-    root = TreeNode(initial_state)
-    root.cost = 0
-    root.f = heuristic(initial_state)
-    root.depth = 0
-    root.forgotten_children = {}
-    heap = [(root.f, id(root), root)]
-    stats = {"states_visited": 0}
-    in_memory = {id(root): root}
-
-    while heap:
-        _, _, node = heapq.heappop(heap)
-
-        if id(node) not in in_memory:
-            continue
-
-        if goal_state_func(node.state):
-            return node, stats
-
-        stats["states_visited"] += 1
-
-        for state, step_cost in operators_func(node.state):
-            g = node.cost + step_cost
-            f = max(node.f, g + heuristic(state))
-            if state in node.forgotten_children:
-                f = max(f, node.forgotten_children[state])
-
-            child = TreeNode(state, node)
-            child.cost = g
-            child.f = f
-            child.depth = node.depth + 1
-            child.forgotten_children = {}
-            node.add_child(child, operator_cost=step_cost)
-
-            freed = True
-            while len(in_memory) >= limit:
-                if not sma_forget_worst(heap, in_memory):
-                    freed = False
-                    break
-
-            if not freed:
-                node.children.remove(child)
-                node.forgotten_children[state] = f
-                continue
-
-            heapq.heappush(heap, (child.f, id(child), child))
-            in_memory[id(child)] = child
-
-        if time.time() - start > MAX_TIME:
-            return False, stats
-
-    return None, stats
-
-
-def sma_forget_worst(heap, in_memory):
-    worst_id = None
-    worst_f = -1
-    worst_depth = -1
-
-    for nid, node in in_memory.items():
-        if any(id(c) in in_memory for c in node.children):
-            continue
-        if node.f > worst_f or (node.f == worst_f and node.depth < worst_depth):
-            worst_f = node.f
-            worst_id = nid
-            worst_depth = node.depth
-
-    if worst_id is None:
-        return False
-
-    worst = in_memory.pop(worst_id)
-
-    if worst.parent is not None:
-        parent = worst.parent
-        parent.forgotten_children[worst.state] = worst.f
-        parent.children = [c for c in parent.children if id(c) != worst_id]
-        all_fs = (
-            [c.f for c in parent.children] +
-            list(parent.forgotten_children.values())
-        )
-        if all_fs:
-            parent.f = min(all_fs)
-        parent_id = id(parent)
-        heapq.heappush(heap, (parent.f, parent_id, parent))
-        in_memory[parent_id] = parent
-
-    return True
 
 def heuristic1(state):
     score = 0

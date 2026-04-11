@@ -21,7 +21,6 @@ from src.search.algorithms import (
     a_star_search,
     weighted_a_star_search,
     iterative_deepening_a_star_search,
-    sma_star_search,
     heuristic1,
     heuristic2,
     heuristic3,
@@ -41,8 +40,7 @@ algorithms_map = {
     "A*": a_star_search,
     "Weighted A*": weighted_a_star_search,
     "IDA*": iterative_deepening_a_star_search,
-    "SMA*": sma_star_search,
-} # atualizar
+}
 
 #melhorar nomes
 heuristics_map = {
@@ -68,8 +66,8 @@ def init_game():
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
     btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo 
-    algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 35, algorithms)
-    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 35, heuristics)
+    algorithms_dropdown = Dropdown(panel_x + 20, 300, 160, 40, algorithms)
+    heuristics_dropdown = Dropdown(panel_x + 20, 350, 160, 40, heuristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
     return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
     hint_btn = Button(x=panel_x + 20, y=550, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
@@ -95,7 +93,7 @@ def init_game():
     #Control state
     puzzle_solved = False
     puzzle_stuck=False
-    puzzle_unsolvable = False
+    timeout = False
     solution_path = []
     #Player mode
     selected_bottle = None
@@ -199,10 +197,10 @@ def init_game():
                     event_consumed = True
                 algorithm = algorithms_dropdown.selected  
 
-            if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*", "SMA*"] and not event_consumed:
+            if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*",] and not event_consumed:
                 heuristics_dropdown.handle_click(event)
 
-            if algorithm in ["DLS", "IDS", "SMA*"] and not event_consumed:
+            if algorithm in ["DLS", "IDS"] and not event_consumed:
                 if limit_input.handle_event(event):
                     event_consumed = True
 
@@ -220,7 +218,7 @@ def init_game():
                 sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
 
                 if sol is False:
-                    puzzle_unsolvable = True
+                    timeout = True
                 elif sol is None:
                     puzzle_stuck = True
                 else:
@@ -235,13 +233,16 @@ def init_game():
 
             #Solve button
             if solve_button.handle_click(event) and not event_consumed:
+                timeout = False
+                puzzle_stuck = False
+                
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
                 sol = run_solver(func, algorithm, game_state, heuristic_func, weight_input, limit_input)
 
                 if sol is False:
-                    puzzle_unsolvable = True
+                    timeout = True
                 elif sol is None:
                     puzzle_stuck = True
                 else:
@@ -261,7 +262,7 @@ def init_game():
                 puzzle_solved = False
                 final_time = None
                 puzzle_stuck=False
-                puzzle_unsolvable = False
+                timeout = False
                 animation_time = 0
                 event_consumed = True
 
@@ -337,13 +338,13 @@ def init_game():
                 benchmark_surface = benchmark_status_font.render(benchmark_status, True, benchmark_status_color)
                 screen.blit(benchmark_surface, (20, SCREEN_H - 30))
             
-            if algorithm in ["DLS", "IDS", "SMA*"]:
+            if algorithm in ["DLS", "IDS"]:
                 limit_input.draw(screen)
         
             if algorithm == "Weighted A*":
                 weight_input.draw(screen)
 
-            if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*", "SMA*"]:
+            if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*"]:
                 heuristics_dropdown.draw(screen)
 
             algorithms_dropdown.draw(screen) 
@@ -354,8 +355,8 @@ def init_game():
         if puzzle_stuck: #melhorar maybe 
             stuck_text = font_big.render("No moves possible!",True,(255,80,80))
             screen.blit(stuck_text,stuck_text.get_rect(center=(SCREEN_W//2, 80)))
-        
-        if puzzle_unsolvable:
+
+        if timeout:
             timeout = font_big.render("Timeout!",True,(255,80,80))
             screen.blit(timeout,timeout.get_rect(center=(SCREEN_W//2, 80)))
             
