@@ -3,8 +3,9 @@ import heapq
 from collections import deque
 from .node import TreeNode
 import time
+from collections import defaultdict
 
-MAX_TIME = 60 #definir
+MAX_TIME = 120 
 
 def breadth_first_search(initial_state, goal_state_func, operators_func, start):
     root = TreeNode(initial_state)  # create the root node in the search tree
@@ -104,9 +105,8 @@ def iterative_deepening_search(initial_state, goal_state_func, operators_func, s
         if goal:
             return goal, total_stats
 
-        if time.time() - start > MAX_TIME:
-            return False, stats
-
+        if goal is False or time.time() - start > MAX_TIME:
+            return False, total_stats
 
     return None, total_stats
 
@@ -336,3 +336,25 @@ def heuristic4(state):
         score += groups - 1
 
     return score
+
+def heuristic5(state):
+    score = 0
+    for bottle in state.bottles:
+        if not bottle:
+            continue
+        bottom_color = bottle[0]
+        for other in state.bottles:
+            if other is not bottle and bottom_color in other:
+                score += 1
+                break
+    return score
+
+def heuristic6(state):
+    color_bottles = defaultdict(set)
+    for i, bottle in enumerate(state.bottles):
+        for color in set(bottle):
+            color_bottles[color].add(i)
+    return sum(len(bottles) - 1 for bottles in color_bottles.values())
+
+def heuristic7(state):
+    return heuristic4(state) + heuristic6(state)

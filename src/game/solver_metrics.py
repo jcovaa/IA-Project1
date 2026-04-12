@@ -15,7 +15,7 @@ def build_solver(algorithm, heuristic_func, weight_input, limit_input):
     if algorithm == "Weighted A*":
         return {
             "heuristic": heuristic_func,
-            "weight": parse_int_or_default(weight_input.text, 2)
+            "weight": parse_int_or_default(weight_input.text, 1.5)
         }
     if algorithm in ("DLS", "IDS"):
         return {"limit": parse_int_or_default(limit_input.text, 50)}
