@@ -212,45 +212,29 @@ def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func):
 
 def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
 
-    heuristic_algorithms = {
-        "Greedy": greedy_search,
-    }
+    algo_func = greedy_search
+    h_func = heuristic4
 
-    heuristics_map = {
-        "Heuristic 4": heuristic4
-    }
+    queue = mp.Queue()
 
-    best_algo = None
-    best_heuristic = None
-    best_steps = float("inf")
+    p = mp.Process(
+        target=run_solver_choose_best_heuristic_algorithm,
+        args=(queue, algo_func, state, h_func)
+    )
 
-    for algo_name, algo_func in heuristic_algorithms.items():
+    p.start()
+    p.join(timeout=time_limit_per_run)
 
-        for h_name, h_func in heuristics_map.items():
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        return None, None, None
 
-            queue = mp.Queue()
-            p = mp.Process(
-                target=run_solver_choose_best_heuristic_algorithm,
-                args=(queue, algo_func, state, h_func)
-            )
+    if queue.empty():
+        return None, None, None
 
-            p.start()
-            p.join(timeout=time_limit_per_run)
+    steps = queue.get()
 
-            if p.is_alive():
-                p.terminate()
-                p.join()
-                continue  # passou do tempo → ignora
+    print(f"Greedy:Heuristic4:{steps}")
 
-            if not queue.empty():
-                steps = queue.get()
-                print(f"name: {algo_name}:{h_name}:{steps}")
-                if steps is None:
-                    continue
-
-                if steps < best_steps:
-                    best_steps = steps
-                    best_algo = algo_name
-                    best_heuristic = h_name
-
-    return best_algo, best_heuristic, best_steps
+    return steps

@@ -351,7 +351,7 @@ def game():
 
             if save_results_btn.handle_click(event) and puzzle_solved:
                 if last_solver_result and last_solver_result.get("solved"):
-                    score = calculate_score(steps_count, final_time or 0, best_result[2], hint_count)
+                    score = calculate_score(steps_count, final_time or 0, best_result, hint_count)
                     last_solver_result["score"] = score
                     filename = f"solver_result_{last_solver_result['algorithm'].replace(' ', '_').lower()}.txt"
                     output_path = os.path.join("doc", filename)
@@ -534,7 +534,7 @@ def game():
   
             if final_time is None:
                 final_time = 0
-            score = calculate_score(steps_count,final_time,best_result[2],hint_count)
+            score = calculate_score(steps_count,final_time,best_result,hint_count)
             elapsed_time = final_time
             text = f"Time: {elapsed_time}s   Steps: {steps_count}"
             draw_win_screen(screen,font_big,font_small,steps_count,final_time,score,confetti, solved_by_solver)
