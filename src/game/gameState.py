@@ -12,6 +12,18 @@ capacity = 3
 '''
 import time
 
+from src.search.algorithms import (
+    greedy_search,
+    a_star_search,
+    weighted_a_star_search,
+    heuristic1,
+    heuristic2,
+    heuristic3,
+    heuristic4
+)
+
+import multiprocessing as mp
+
 class GameState:
    def __init__(self, bottles, capacity, color_map=None):
       # hashable tuple for storing bottles in a set
@@ -177,18 +189,6 @@ def calculate_score(steps, time_elapsed, steps_ai, hint_count):
     score = base_score*(steps_ai/steps)+base_score*((steps_ai*(1+steps_ai*0.02))/time_elapsed) - hint_count*100
 
     return int(score)
-
-from src.search.algorithms import (
-    greedy_search,
-    a_star_search,
-    weighted_a_star_search,
-    heuristic1,
-    heuristic2,
-    heuristic3,
-    heuristic4
-)
-
-import multiprocessing as mp
 
 def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func, is_weighted):
     try:

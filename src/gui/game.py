@@ -144,7 +144,7 @@ def game():
     solver_result_queue = queue.Queue()
     solving_algo = False
     cancel_event = threading.Event()
-    #Coisas
+    #Limite
     time_limit_reached = False
     move_limit_reached = False
 
@@ -210,7 +210,6 @@ def game():
                     global best_result, computing_best
                     best_result = choose_best_heuristic_algorithm(state_copy)
                     computing_best = False
-                    print(f"{best_result[0]}:{best_result[1]}:{best_result[2]}")
                 threading.Thread(target=worker).start()
                 last_solver_result = None
                 save_status = ""
@@ -501,7 +500,6 @@ def game():
                         puzzle_solved = True
                         final_time = int(time.time() - start_time)
                         solved_by_solver=False
-                        #steps_count = len(solution_path) - 1
                 else:
                     solving = True
                     solved_by_solver = True
@@ -526,6 +524,8 @@ def game():
 
         #Draw
         screen.fill((30, 30, 30))
+        
+        screen.blit(font.render(f"MAX Time: {TIME_LIMIT}s   MAX Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(680,20),)
 
         if time_limit_reached:
             text = font_big.render("Time limit reached!", True, (255,80,80))
@@ -566,7 +566,6 @@ def game():
         return_btn.draw(screen)
         text_surface = font.render(text, True, (255, 255, 255))
         screen.blit(text_surface, (20, 20))
-        screen.blit(font.render(f"MAX Time: {TIME_LIMIT}s   MAX Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(680,20),)
 
         if not solving:
             solve_button.draw(screen)
