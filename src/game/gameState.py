@@ -11,6 +11,9 @@ Capacity defined as the maximum number of colors a bottle can hold. For example:
 capacity = 3
 '''
 import time
+import multiprocessing as mp
+from src.search.algorithms import (greedy_search,heuristic4)
+
 
 class GameState:
    def __init__(self, bottles, capacity, color_map=None):
@@ -165,19 +168,62 @@ def parse_int_or_default(value, default):
       except ValueError:
          return default
       
-      
-def calculate_score(steps, time_elapsed, difficulty):
+def calculate_score(steps, time_elapsed, steps_ai, hint_count):
+    base_score = 500
+    
+    if time_elapsed <= 0:
+        time_elapsed = 1
 
-    difficulty_multiplier = {
-        "easy": 1,
-        "medium": 1.5,
-        "hard": 2
-    }
+    if steps <= 0:
+        steps = 1
 
-    base_score = 1000
+    score = base_score*(steps_ai/steps)+base_score*((steps_ai*(1+steps_ai*0.02))/time_elapsed) - hint_count*100
 
-    score = base_score \
-        - (steps * 15) \
-        - (time_elapsed * 2)
+    return int(score)
 
-    return int(score * difficulty_multiplier[difficulty])
+def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func):
+    try:
+        sol = solve(
+            algo_func,
+            state,
+            h_func
+        )
+
+        if sol is None:
+            queue.put(None)
+            return
+
+        path = solution(sol)
+        steps = len(path) - 1
+        queue.put(steps)
+
+    except Exception:
+        queue.put(None)
+
+
+def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
+
+    algo_func = greedy_search
+    h_func = heuristic4
+
+    queue = mp.Queue()
+
+    p = mp.Process(
+        target=run_solver_choose_best_heuristic_algorithm,
+        args=(queue, algo_func, state, h_func)
+    )
+
+    p.start()
+    p.join(timeout=time_limit_per_run)
+
+    if p.is_alive():
+        p.terminate()
+        p.join()
+        return None, None, None
+
+    if queue.empty():
+        return None, None, None
+
+    steps = queue.get()
+
+    return steps

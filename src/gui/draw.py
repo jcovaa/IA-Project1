@@ -7,7 +7,7 @@ def draw_panel(screen, panel_x):
     pygame.draw.rect(screen, (40, 40, 40), (panel_x, 0, PANEL_W, SCREEN_H))
     pygame.draw.line(screen, (80, 80, 80), (panel_x, 0), (panel_x, SCREEN_H), 2)
 
-def draw_win_screen(screen, font_big, font_small, steps, final_time, score, confetti):
+def draw_win_screen(screen, font_big, font_small, steps, final_time, score, confetti,solved_by_solver):
 
     confetti.update()
     confetti.draw(screen)
@@ -29,12 +29,18 @@ def draw_win_screen(screen, font_big, font_small, steps, final_time, score, conf
         True,
         (220,220,220)
     )
-
-    hint = font_small.render(
-        "Click Generate to play again",
-        True,
-        (180, 180, 180)
-    )
+    if solved_by_solver:
+        hint = font_small.render(
+            "Click Play again",
+            True,
+            (180, 180, 180)
+        )
+    else:
+        hint = font_small.render(
+            "Click Generate to play again",
+            True,
+            (180, 180, 180)
+        )
 
     screen.blit(title, title.get_rect(center=(SCREEN_W//2, SCREEN_H//2 - 40)))
     screen.blit(stats, stats.get_rect(center=(SCREEN_W//2, SCREEN_H//2 + 10)))

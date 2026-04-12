@@ -4,11 +4,12 @@ import queue
 import threading
 from .components import Button, DifficultySelector, Dropdown, InputBox, Confetti
 from .bottles import draw_bottles, get_bottles
-from src.game.gameState import pour, solution, goal_state, game_states, has_possible_moves, calculate_score
+from src.game.gameState import pour, solution, goal_state, game_states, has_possible_moves, calculate_score, choose_best_heuristic_algorithm
 import time
 from src.puzzle_generator import generate_puzzle
 import math
 from .draw import draw_panel, draw_win_screen
+import threading
 from src.benchmark import benchmark
 from src.game.puzzle_io import load_level_file, save_solver_results
 from src.game.solver_metrics import build_solver_result, run_solver, build_solver
@@ -31,6 +32,9 @@ from src.search.algorithms import (
 
 SCREEN_W, SCREEN_H = 1280, 720
 PANEL_W = 200
+
+TIME_LIMIT = 180
+MOVE_LIMIT = 100
 
 algorithms_map = {
     "BFS": breadth_first_search,
@@ -116,11 +120,21 @@ def game():
     font_small = pygame.font.SysFont(None, 32)
     animation_time = 0
     confetti = Confetti()
+    play_again_btn = Button(x=SCREEN_W//2 - 90,y=SCREEN_H//2 + 200,width=180,height=45,text="Play Again", color=(50, 120, 180), hover_color=(70, 150, 210))
+    solved_by_solver=False
     #Score
     start_time = time.time()
     final_time = None
     steps_count = 0
     font = pygame.font.SysFont(None, 36) #nao devia estar aqui
+    def compute_best_result_async(state):
+        def worker():
+            global best_result
+            best_result = choose_best_heuristic_algorithm(state)
+
+        threading.Thread(target=worker, daemon=True).start()
+    hint_count=0
+    compute_best_result_async(game_state)
     #Benchmark
     benchmark_status_font = pygame.font.SysFont(None, 24)
     benchmark_running = False
@@ -136,6 +150,9 @@ def game():
     solver_result_queue = queue.Queue()
     solving_algo = False
     cancel_event = threading.Event()
+    #Limite
+    time_limit_reached = False
+    move_limit_reached = False
 
     while running:
         
@@ -147,7 +164,7 @@ def game():
             event_consumed = False #for overriding events in dropdowns and buttons
 
             #bottles
-            if event.type == pygame.MOUSEBUTTONDOWN and not solving: 
+            if event.type == pygame.MOUSEBUTTONDOWN and not solving and not time_limit_reached and not move_limit_reached: 
                 for bottle in bottles:
                     if bottle.handle_click(event):         
                         if selected_bottle is None:
@@ -159,6 +176,8 @@ def game():
                             if result is not None:
                                 game_state, _ = result
                                 steps_count += 1
+                                if steps_count >= MOVE_LIMIT:
+                                    move_limit_reached = True
                                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                                 if goal_state(game_state):
                                     puzzle_solved = True
@@ -187,6 +206,13 @@ def game():
                 final_time = None
                 puzzle_stuck=False
                 animation_time = 0
+                hint_count=0
+                time_limit_reached = False
+                move_limit_reached = False
+                solved_by_solver = False
+                computing_best = True
+                state_copy = game_state
+                compute_best_result_async(state_copy)
                 last_solver_result = None
                 save_status = ""
                 solving_algo = False
@@ -233,6 +259,12 @@ def game():
                     solving_algo = False
                     solve_button.loading = False
                     hint_btn.loading = False
+                    state_copy = game_state
+                    time_limit_reached=False
+                    move_limit_reached=False
+                    hint_count=0
+                    state_copy = game_state
+                    compute_best_result_async(state_copy)
                     cancel_event.set()
                     cancel_event.clear()
                     while not solver_result_queue.empty():
@@ -276,7 +308,7 @@ def game():
             heuristic = heuristics_dropdown.selected
             
             #Hint button
-            if hint_btn.handle_click(event) and not solving and not event_consumed and not puzzle_solved and not puzzle_stuck and not solving_algo:
+            if hint_btn.handle_click(event) and not solving and not event_consumed and not puzzle_solved and not puzzle_stuck and not solving_algo and not time_limit_reached and not move_limit_reached:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
                 hint_btn.loading = True
@@ -291,6 +323,7 @@ def game():
                 threading.Thread(target=run_hint_task, daemon=True).start()
 
                 event_consumed = True
+                
 
             #Solve button
             if solve_button.handle_click(event) and not event_consumed and not solving and not puzzle_solved and not puzzle_stuck and not solving_algo:
@@ -298,7 +331,8 @@ def game():
                 puzzle_stuck = False
                 solving_algo = True
                 solve_button.loading = True
-
+                time_limit_reached=False
+                move_limit_reached=False
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
                 heuristic_label = heuristic if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*"] else "N/A"
@@ -317,7 +351,7 @@ def game():
 
             if save_results_btn.handle_click(event) and puzzle_solved:
                 if last_solver_result and last_solver_result.get("solved"):
-                    score = calculate_score(steps_count, final_time or 0, current_difficulty)
+                    score = calculate_score(steps_count, final_time or 0, best_result, hint_count)
                     last_solver_result["score"] = score
                     filename = f"solver_result_{last_solver_result['algorithm'].replace(' ', '_').lower()}.txt"
                     output_path = os.path.join("doc", filename)
@@ -344,10 +378,13 @@ def game():
                 animation_time = 0
                 save_status = ""
                 event_consumed = True
+                hint_count=0
+                time_limit_reached = False
+                move_limit_reached = False
+                solved_by_solver = False
                 solving_algo = False
                 solve_button.loading = False
                 hint_btn.loading = False
-
                 cancel_event.set()
                 cancel_event.clear()
                 while not solver_result_queue.empty():
@@ -382,6 +419,37 @@ def game():
 
                 threading.Thread(target=run_benchmark_task, daemon=True).start()
 
+            #play again button
+            if play_again_btn.handle_click(event) and (puzzle_solved or timeout or puzzle_stuck):
+                current_difficulty = selector.selected
+                game_state = generate_puzzle(current_difficulty)
+                current_puzzle = game_state
+                bottles = get_bottles(game_state,x_start,y_start,bottle_width,bottle_height,spacing,current_difficulty)
+                start_time = time.time()
+                steps_count = 0
+                selected_bottle = None
+                solving = False
+                solution_path = []
+                current_move = 0
+                puzzle_solved = False
+                final_time = None
+                puzzle_stuck = False
+                timeout = False
+                animation_time = 0
+                hint_count = 0
+                time_limit_reached = False
+                move_limit_reached = False
+                solved_by_solver=False
+                solving_algo = False
+                solve_button.loading = False
+                hint_btn.loading = False
+                cancel_event.set()
+                cancel_event.clear()
+                while not solver_result_queue.empty():
+                    try: solver_result_queue.get_nowait()
+                    except: pass
+                state_copy = game_state
+                compute_best_result_async(state_copy)
 
         while not solver_result_queue.empty():
             item = solver_result_queue.get_nowait()
@@ -419,13 +487,18 @@ def game():
                 solution_path = solution(sol)
                 if is_hint:
                     game_state = solution_path[1] if len(solution_path) > 1 else game_state
+                    steps_count+=1
+                    if steps_count >= MOVE_LIMIT:
+                        move_limit_reached = True
+                    hint_count += 1
                     bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                     if goal_state(game_state):
                         puzzle_solved = True
                         final_time = int(time.time() - start_time)
-                        steps_count = len(solution_path) - 1
+                        solved_by_solver=False
                 else:
                     solving = True
+                    solved_by_solver = True
                     last_solver_result = build_solver_result(
                         algorithm=algorithm, heuristic=heuristic_label,
                         solved=True, status="Yes",
@@ -447,19 +520,24 @@ def game():
 
         #Draw
         screen.fill((30, 30, 30))
+        
+        screen.blit(font.render(f"MAX Time: {TIME_LIMIT}s   MAX Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(680,20),)
+
 
         jump_offset = 0
         if puzzle_solved:
+            if solved_by_solver:
+                play_again_btn.draw(screen)
             #animating bottles
             animation_time += 0.08
             jump_offset = int(abs(math.sin(animation_time)) * 12)
-            
+  
             if final_time is None:
                 final_time = 0
-            score = calculate_score(steps_count,final_time,current_difficulty)
+            score = calculate_score(steps_count,final_time,best_result,hint_count)
             elapsed_time = final_time
             text = f"Time: {elapsed_time}s   Steps: {steps_count}"
-            draw_win_screen(screen,font_big,font_small,steps_count,final_time,score,confetti)
+            draw_win_screen(screen,font_big,font_small,steps_count,final_time,score,confetti, solved_by_solver)
             save_results_btn.draw(screen)
             if save_status:
                 save_surface = benchmark_status_font.render(save_status, True, save_status_color)
@@ -467,6 +545,16 @@ def game():
         elif not puzzle_solved:
             elapsed_time = int(time.time() - start_time)
             text = f"Time: {elapsed_time}s   Steps: {steps_count}"
+            if elapsed_time >= TIME_LIMIT and not puzzle_solved:
+                time_limit_reached = True
+
+        if time_limit_reached:
+            text_time = font_big.render("Time limit reached!", True, (255,80,80))
+            screen.blit(text_time, text_time.get_rect(center=(SCREEN_W//2, 30)))
+
+        if move_limit_reached:
+            text_move = font_big.render("Move limit reached!", True, (255,80,80))
+            screen.blit(text_move, text_move.get_rect(center=(SCREEN_W//2, 70)))
 
         draw_bottles(screen, game_state, bottles, selected_bottle,jump_offset)
 
