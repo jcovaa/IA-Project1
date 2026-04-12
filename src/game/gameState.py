@@ -11,18 +11,9 @@ Capacity defined as the maximum number of colors a bottle can hold. For example:
 capacity = 3
 '''
 import time
-
-from src.search.algorithms import (
-    greedy_search,
-    a_star_search,
-    weighted_a_star_search,
-    heuristic1,
-    heuristic2,
-    heuristic3,
-    heuristic4
-)
-
 import multiprocessing as mp
+from src.search.algorithms import (greedy_search,heuristic4)
+
 
 class GameState:
    def __init__(self, bottles, capacity, color_map=None):
@@ -234,7 +225,5 @@ def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
         return None, None, None
 
     steps = queue.get()
-
-    print(f"Greedy:Heuristic4:{steps}")
 
     return steps
