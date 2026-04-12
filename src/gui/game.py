@@ -66,7 +66,7 @@ def game():
 
     # pygame setup 
     pygame.init() 
-    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H)) # provsorio
+    screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
     pygame.display.set_caption("Water Sort Puzzle")
     clock = pygame.time.Clock()
 
@@ -77,7 +77,7 @@ def game():
     #Painel
     panel_x = SCREEN_W - PANEL_W
     selector = DifficultySelector(x=panel_x + 20, y=20)
-    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo 
+    btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) 
     btn_load = Button(x=panel_x + 20, y=280, width=160, height=45, text="Load level", color=(60, 130, 160), hover_color=(80, 160, 190))
     algorithms_dropdown = Dropdown(panel_x + 20, 335, 160, 35, algorithms)
     heuristics_dropdown = Dropdown(panel_x + 20, 385, 160, 35, heuristics)
@@ -119,7 +119,7 @@ def game():
     #Dropdowns
     algorithm = None
     heuristic = None
-    #Win Screeen - isto não devia estar aqui
+    #Win Screeen 
     font_big = pygame.font.SysFont(None, 64)
     font_small = pygame.font.SysFont(None, 32)
     animation_time = 0
@@ -130,7 +130,7 @@ def game():
     start_time = time.time()
     final_time = None
     steps_count = 0
-    font = pygame.font.SysFont(None, 36) #nao devia estar aqui
+    font = pygame.font.SysFont(None, 36) 
     def compute_best_result_async(state):
         def worker():
             global best_result
