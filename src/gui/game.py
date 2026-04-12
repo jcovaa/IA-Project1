@@ -128,6 +128,12 @@ def game():
     steps_count = 0
     font = pygame.font.SysFont(None, 36) #nao devia estar aqui
     best_result = choose_best_heuristic_algorithm(game_state)
+    def compute_best_result_async(state):
+        def worker():
+            global best_result
+            best_result = choose_best_heuristic_algorithm(state)
+
+        threading.Thread(target=worker, daemon=True).start()
     hint_count=0
     #Benchmark
     benchmark_status_font = pygame.font.SysFont(None, 24)
@@ -206,11 +212,7 @@ def game():
                 solved_by_solver = False
                 computing_best = True
                 state_copy = game_state
-                def worker():
-                    global best_result, computing_best
-                    best_result = choose_best_heuristic_algorithm(state_copy)
-                    computing_best = False
-                threading.Thread(target=worker).start()
+                compute_best_result_async(state_copy)
                 last_solver_result = None
                 save_status = ""
                 solving_algo = False
@@ -262,10 +264,7 @@ def game():
                     move_limit_reached=False
                     hint_count=0
                     state_copy = game_state
-                    def worker():
-                        global best_result
-                        best_result = choose_best_heuristic_algorithm(state_copy)
-                    threading.Thread(target=worker, daemon=True).start()
+                    compute_best_result_async(state_copy)
                     cancel_event.set()
                     cancel_event.clear()
                     while not solver_result_queue.empty():
@@ -450,10 +449,7 @@ def game():
                     try: solver_result_queue.get_nowait()
                     except: pass
                 state_copy = game_state
-                def worker():
-                    global best_result
-                    best_result = choose_best_heuristic_algorithm(state_copy)
-                threading.Thread(target=worker, daemon=True).start()
+                compute_best_result_async(state_copy)
 
         while not solver_result_queue.empty():
             item = solver_result_queue.get_nowait()
@@ -527,13 +523,6 @@ def game():
         
         screen.blit(font.render(f"MAX Time: {TIME_LIMIT}s   MAX Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(680,20),)
 
-        if time_limit_reached:
-            text = font_big.render("Time limit reached!", True, (255,80,80))
-            screen.blit(text, text.get_rect(center=(SCREEN_W//2, 30)))
-
-        if move_limit_reached:
-            text = font_big.render("Move limit reached!", True, (255,80,80))
-            screen.blit(text, text.get_rect(center=(SCREEN_W//2, 70)))
 
         jump_offset = 0
         if puzzle_solved:
@@ -558,6 +547,14 @@ def game():
             text = f"Time: {elapsed_time}s   Steps: {steps_count}"
             if elapsed_time >= TIME_LIMIT and not puzzle_solved:
                 time_limit_reached = True
+
+        if time_limit_reached:
+            text_time = font_big.render("Time limit reached!", True, (255,80,80))
+            screen.blit(text_time, text_time.get_rect(center=(SCREEN_W//2, 30)))
+
+        if move_limit_reached:
+            text_move = font_big.render("Move limit reached!", True, (255,80,80))
+            screen.blit(text_move, text_move.get_rect(center=(SCREEN_W//2, 70)))
 
         draw_bottles(screen, game_state, bottles, selected_bottle,jump_offset)
 
