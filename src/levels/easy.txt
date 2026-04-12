@@ -1,0 +1,6 @@
+5
+red,blue,green,red
+green,red,blue,green
+blue,green,red,blue
+EMPTY
+EMPTY

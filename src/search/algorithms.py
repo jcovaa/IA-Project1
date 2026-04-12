@@ -1,240 +1,290 @@
 # File containing all the search algorithms for the game
+import heapq
 from collections import deque
 from .node import TreeNode
+import time
 
-def breadth_first_search(initial_state, goal_state_func, operators_func):
-   root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = deque([root])   # initialize the queue to store the nodes
-   visited = set()
+MAX_TIME = 60 #definir
 
-   while queue:
-         node = queue.popleft()   # get first element in the queue
-         if goal_state_func(node.state):   # check goal state
-            return node
-         
-         if node.state in visited:
+def breadth_first_search(initial_state, goal_state_func, operators_func, start):
+    root = TreeNode(initial_state)  # create the root node in the search tree
+    queue = deque([root])  # initialize the queue to store the nodes
+    visited = set()
+    stats = {"states_visited": 0}
+
+    while queue:
+        node = queue.popleft()  # get first element in the queue
+        if goal_state_func(node.state):  # check goal state
+            return node, stats
+
+        if node.state in visited:
             continue
 
-         visited.add(node.state)
+        visited.add(node.state)
+        stats["states_visited"] += 1
 
-         for state, _ in operators_func(node.state):   # go through next states
-            # create tree node with the new state
-            state_node = TreeNode(state)
+        for state, _ in operators_func(node.state):  # go through next states
+        # create tree node with the new state
+            state_node = TreeNode(state, node)
 
             # link child node to its parent in the tree
-            node.add_child(state_node)
-
+            node.add_child(state_node, operator_cost=1)
 
             # enqueue the child node
             queue.append(state_node)
+        
+        if time.time() - start > MAX_TIME:
+            return False, stats
+            
+    return None, stats
 
-
-   return None
-
-def depth_first_search(initial_state, goal_state_func, operators_func):
-   root = TreeNode(initial_state)
-   stack = [root]
-   visited = set()
-
-   while stack:
-      node = stack.pop()
-      if goal_state_func(node.state):
-         return node
-
-      if node.state in visited:
-         continue
-
-      visited.add(node.state)
-
-      for state, _ in operators_func(node.state):
-         state_node = TreeNode(state)
-         node.add_child(state_node)
-         stack.append(state_node)
-
-   return None
-
-def depth_limited_search(initial_state, goal_state_func, operators_func, depth_limit):
+def depth_first_search(initial_state, goal_state_func, operators_func, start):
     root = TreeNode(initial_state)
-    stack = [(root, 0)]
+    stack = [root]
+    visited = set()
+    stats = {"states_visited": 0}
 
     while stack:
-        node, depth = stack.pop()
-
+        node = stack.pop()
         if goal_state_func(node.state):
-            return node
-
-        if depth < depth_limit:
-            for state, _ in operators_func(node.state):
-                state_node = TreeNode(state)
-                node.add_child(state_node)
-                stack.append((state_node, depth + 1))
-
-    return None
-
-def iterative_deepening_search(initial_state, goal_state_func, operators_func, depth_limit):
-   for depth in range(depth_limit):
-      goal = depth_limited_search(initial_state, goal_state_func, operators_func, depth)
-      if goal:
-         return goal
-
-   return None
-
-def uniform_cost_search(initial_state, goal_state_func, operators_func):
-    root = TreeNode(initial_state)
-    queue = [(root, 0)]
-
-    visited = set()
-
-    while queue:
-        node, cost = queue.pop(0)
-        if goal_state_func(node.state):
-            return node
+            return node, stats
 
         if node.state in visited:
             continue
-        
+
         visited.add(node.state)
+        stats["states_visited"] += 1
+
+        for state, _ in operators_func(node.state):
+            state_node = TreeNode(state)
+            node.add_child(state_node, operator_cost=1)
+            stack.append(state_node)
+
+        if time.time() - start > MAX_TIME:
+            return False, stats
+
+    return None, stats
+
+
+def depth_limited_search(initial_state, goal_state_func, operators_func, start, limit):
+    root = TreeNode(initial_state)
+    stack = [(root, 0, {initial_state})] 
+    stats = {"states_visited": 0, "cutoff": False}
+
+    while stack:
+        node, depth, path_visited = stack.pop()
+
+        if goal_state_func(node.state):
+            return node, stats
+
+        # counts every pop, including revisits
+        stats["states_visited"] += 1
+
+        if depth < limit:
+            for state, _ in operators_func(node.state):
+                if state in path_visited:
+                    continue
+                state_node = TreeNode(state)
+                node.add_child(state_node, operator_cost=1)
+                stack.append((state_node, depth + 1, path_visited | {state}))
+        else:
+            stats["cutoff"] = True
         
+        if time.time() - start > MAX_TIME:
+            return False, stats
+
+    return None, stats
+
+def iterative_deepening_search(initial_state, goal_state_func, operators_func, start, limit):
+    total_stats = {"states_visited": 0, "cutoff": False}
+    for depth in range(limit + 1):
+        goal, stats = depth_limited_search(initial_state, goal_state_func, operators_func, start, depth)
+        total_stats["states_visited"] += stats["states_visited"]
+        total_stats["cutoff"] = total_stats["cutoff"] or stats["cutoff"]
+        if goal:
+            return goal, total_stats
+
+        if time.time() - start > MAX_TIME:
+            return False, stats
+
+
+    return None, total_stats
+
+def uniform_cost_search(initial_state, goal_state_func, operators_func, start):
+    root = TreeNode(initial_state)
+    heap = [(0, id(root), root)]
+    stats = {"states_visited": 0}
+
+    visited = set()
+
+    while heap:
+        cost, _, node = heapq.heappop(heap)
+        if goal_state_func(node.state):
+            return node, stats
+
+        if node.state in visited:
+            continue
+
+        visited.add(node.state)
+        stats["states_visited"] += 1
+
         for state, step_cost in operators_func(node.state):
             state_node = TreeNode(state)
-            node.add_child(state_node)
-            total_cost = cost + step_cost
-            queue.append((state_node, total_cost))
+            node.add_child(state_node, operator_cost=step_cost)
+            heapq.heappush(heap, (cost + step_cost, id(state_node), state_node))
+
+        if time.time() - start > MAX_TIME:
+            return False, stats
         
-        queue.sort(key=lambda x: x[1])
+    return None, stats
 
-    return None
 
-def greedy_search(initial_state, goal_state_func, operators_func, heuristic_func):
-   root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
-
-   visited = set()
-
-   while queue:
-      (node, _) = queue.pop(0)   # get first element in the queue
-      if goal_state_func(node.state):   # check goal state
-         return node
-
-      if node.state in visited:
-         continue
-
-      visited.add(node.state)
-
-      for state, _ in operators_func(node.state):   # go through next states
-         # create tree node with the new state
-         tree = TreeNode(state,node)
-
-         # link child node to its parent in the tree
-         node.add_child(tree)
-
-         # enqueue the child node
-         queue.append((tree, heuristic_func(state))) 
-
-      # sort the queue by state heuristic value
-      queue.sort(key=lambda x: x[1])
-
-   return None
-
-def a_star_search(initial_state, goal_state_func, operators_func, heuristic_func):
-   root = TreeNode(initial_state)   # create the root node in the search tree
-   queue = [(root, heuristic_func(root.state))]   # initialize the queue to store the nodes
-
-   visited = set()
-
-   while queue:
-
-      (node, _) = queue.pop(0)
-      if goal_state_func(node.state):   # check goal state
-         return node
-
-      if node.state in visited:
-         continue
-
-      visited.add(node.state)
-
-      for state, step_cost in operators_func(node.state):   # go through next states
-         # create tree node with the new state
-         tree = TreeNode(state,node)
-
-         # link child node to its parent in the tree, including the operator cost
-         node.add_child(tree)
-
-         # enqueue the child node
-         tree.cost = node.cost + step_cost
-
-         cost = tree.cost + heuristic_func(state)
-
-         queue.append((tree, cost))
-
-      # sort the queue by state full cost (path cost + heuristic value)
-      queue = sorted(queue, key=lambda x: x[1])
-
-   return None
-
-def weighted_a_star_search(initial_state, goal_state_func, operators_func, heuristic_func, weight):
-    root = TreeNode(initial_state)
-    queue = [(root, heuristic_func(root.state) * weight)]
+def greedy_search(initial_state, goal_state_func, operators_func, start, heuristic):
+    root = TreeNode(initial_state)  # create the root node in the search tree
+    h = heuristic(root.state)
+    heap = [(h, id(root), root)]
+    stats = {"states_visited": 0}
 
     visited = set()
 
-    while queue:
-        
-        (node, _) = queue.pop(0)
-        if goal_state_func(node.state):
-            return node
+    while heap:
+        _, _, node = heapq.heappop(heap)  # get first element in the queue
+        if goal_state_func(node.state):  # check goal state
+            return node, stats
 
         if node.state in visited:
             continue
 
         visited.add(node.state)
+        stats["states_visited"] += 1
 
-        for state, step_cost in operators_func(node.state):
-            
+        for state, _ in operators_func(node.state):  # go through next states
+            tree = TreeNode(state, node)
+            node.add_child(tree, operator_cost=1)
+            heapq.heappush(heap, (heuristic(state), id(tree), tree))
+        
+        if time.time() - start > MAX_TIME:
+            return False, stats
+
+    return None, stats
+
+
+def a_star_search(initial_state, goal_state_func, operators_func, start, heuristic):
+    root = TreeNode(initial_state)  # create the root node in the search tree
+    h = heuristic(root.state)
+    heap = [(h, id(root), root)]
+    stats = {"states_visited": 0}
+
+    visited = set()
+
+    while heap:
+
+        _, _, node = heapq.heappop(heap)  # get first element in the queue
+        if goal_state_func(node.state):  # check goal state
+            return node, stats
+
+        if node.state in visited:
+            continue
+
+        visited.add(node.state)
+        stats["states_visited"] += 1
+
+        for state, step_cost in operators_func(node.state):  # go through next states
+            # create tree node with the new state
             tree = TreeNode(state, node)
 
-            node.add_child(tree)
-            
+            # link child node to its parent in the tree, including the operator cost
+            node.add_child(tree, operator_cost=step_cost)
+
+            # enqueue the child node
             tree.cost = node.cost + step_cost
 
-            cost = tree.cost + weight * heuristic_func(state)
+            f = tree.cost + heuristic(state)
 
-            queue.append((tree, cost))
-
-        queue = sorted(queue, key=lambda x: x[1])
-
-    return None
-
-def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_func, heuristic_func):
-    def search(node, g, threshold):
-        f = g + heuristic_func(node.state)
-        if f > threshold:
-            return f
-        if goal_state_func(node.state):
-            return node, f
+            heapq.heappush(heap, (f, id(tree), tree))
         
-        min_threshold = float('inf')
-        for state, step_cost in operators_func(node.state):
-            child = TreeNode(state, node)
-            node.add_child(child)
-            result, new_f = search(child, g + step_cost, threshold)
-            if result:
-                return result, new_f
-            min_threshold = min(min_threshold, new_f)
-        
-        return None, min_threshold
-    
+        if time.time() - start > MAX_TIME:
+            return False, stats
+
+    return None, stats
+
+def weighted_a_star_search(initial_state, goal_state_func, operators_func, start, heuristic, weight):
     root = TreeNode(initial_state)
-    threshold = heuristic_func(root.state)
+    heap = [(heuristic(root.state) * weight, id(root), root)]
+    stats = {"states_visited": 0}
+
+    visited = set()
+
+    while heap:
+        _, _, node = heapq.heappop(heap)
+        if goal_state_func(node.state):
+            return node, stats
+
+        if node.state in visited:
+            continue
+
+        visited.add(node.state)
+        stats["states_visited"] += 1
+
+        for state, step_cost in operators_func(node.state):
+            tree = TreeNode(state, node)
+
+            node.add_child(tree, operator_cost=step_cost)
+
+            tree.cost = node.cost + step_cost
+
+            f = tree.cost + weight * heuristic(state)
+
+            heapq.heappush(heap, (f, id(tree), tree))
+        
+        if time.time() - start > MAX_TIME:
+            return False, stats
+
+    return None, stats
+
+
+def ida_star_auxiliary(node, g, threshold, path_visited, stats, goal_state_func, operators_func, heuristic):
+    f = g + heuristic(node.state)
+    if f > threshold:
+        return None, f
+    if goal_state_func(node.state):
+        return node, f
+
+    stats["states_visited"] += 1
+    min_threshold = float("inf")
+
+    for state, step_cost in operators_func(node.state):
+        if state in path_visited:
+            continue
+
+        child = TreeNode(state, node)
+        node.add_child(child, operator_cost=step_cost)
+        path_visited.add(state)
+        result, new_f = ida_star_auxiliary(child, g + step_cost, threshold, path_visited, stats, goal_state_func, operators_func, heuristic)
+        path_visited.remove(state)
+        if result:
+            return result, new_f
+        min_threshold = min(min_threshold, new_f)
+
+    return None, min_threshold
+
+
+def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_func, start, heuristic):
+    stats = {"states_visited": 0}
+    root = TreeNode(initial_state)
+    threshold = heuristic(root.state)
 
     while True:
-        result, new_threshold = search(root, 0, threshold)
+        path_visited = {initial_state}
+        result, new_threshold = ida_star_auxiliary(root, 0, threshold, path_visited, stats, goal_state_func, operators_func, heuristic)
         if result:
-            return result
-        if new_threshold == float('inf'):
-            return None
+            return result, stats
+        if new_threshold == float("inf"):
+            return None, stats
         threshold = new_threshold
 
+        if time.time() - start > MAX_TIME:
+            return False, stats
 
 def heuristic1(state):
     score = 0
@@ -261,10 +311,10 @@ def heuristic3(state):
     for bottle in state.bottles:
         if not bottle:
             continue
-        
+
         # penaliza mistura
         score += len(set(bottle)) - 1
-        
+
         # penaliza não estar cheia
         if len(bottle) != state.capacity:
             score += 1
@@ -284,5 +334,5 @@ def heuristic4(state):
             if bottle[k] != bottle[k - 1]:
                 groups += 1
         score += groups - 1
-    
+
     return score
