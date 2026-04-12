@@ -566,6 +566,7 @@ def game():
         return_btn.draw(screen)
         text_surface = font.render(text, True, (255, 255, 255))
         screen.blit(text_surface, (20, 20))
+        screen.blit(font.render(f"MAX Time: {TIME_LIMIT}s   MAX Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(680,20),)
 
         if not solving:
             solve_button.draw(screen)
