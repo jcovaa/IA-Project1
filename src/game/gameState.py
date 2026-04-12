@@ -217,9 +217,6 @@ def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
     }
 
     heuristics_map = {
-        "Heuristic 1": heuristic1,
-        "Heuristic 2": heuristic2,
-        "Heuristic 3": heuristic3,
         "Heuristic 4": heuristic4
     }
 
