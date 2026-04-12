@@ -33,8 +33,8 @@ from src.search.algorithms import (
 SCREEN_W, SCREEN_H = 1280, 720
 PANEL_W = 200
 
-TIME_LIMIT = 10
-MOVE_LIMIT = 10
+TIME_LIMIT = 180
+MOVE_LIMIT = 100
 
 algorithms_map = {
     "BFS": breadth_first_search,
