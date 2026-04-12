@@ -190,21 +190,13 @@ def calculate_score(steps, time_elapsed, steps_ai, hint_count):
 
     return int(score)
 
-def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func, is_weighted):
+def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func):
     try:
-        if is_weighted:
-            sol = solve(
-                algo_func,
-                state,
-                heuristic_func=h_func,
-                weight=2
-            )
-        else:
-            sol = solve(
-                algo_func,
-                state,
-                h_func
-            )
+        sol = solve(
+            algo_func,
+            state,
+            h_func
+        )
 
         if sol is None:
             queue.put(None)
@@ -214,7 +206,7 @@ def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func, 
         steps = len(path) - 1
         queue.put(steps)
 
-    except:
+    except Exception:
         queue.put(None)
 
 
@@ -242,7 +234,7 @@ def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
             queue = mp.Queue()
             p = mp.Process(
                 target=run_solver_choose_best_heuristic_algorithm,
-                args=(queue, algo_func, state, h_func, algo_name == "Weighted A*")
+                args=(queue, algo_func, state, h_func)
             )
 
             p.start()
