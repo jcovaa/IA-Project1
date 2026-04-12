@@ -31,6 +31,9 @@ from src.search.algorithms import (
 SCREEN_W, SCREEN_H = 1280, 720
 PANEL_W = 200
 
+TIME_LIMIT = 180
+MOVE_LIMIT = 100
+
 algorithms_map = {
     "BFS": breadth_first_search,
     "DFS": depth_first_search, 
@@ -131,6 +134,9 @@ def init_game():
     solver_result_queue = queue.Queue()
     solving_algo = False
     cancel_event = threading.Event()
+    #Coisas
+    time_limit_reached = False
+    move_limit_reached = False
 
     while running:
         
@@ -142,7 +148,7 @@ def init_game():
             event_consumed = False #for overriding events in dropdowns and buttons
 
             #bottles
-            if event.type == pygame.MOUSEBUTTONDOWN and not solving: 
+            if event.type == pygame.MOUSEBUTTONDOWN and not solving and not time_limit_reached and not move_limit_reached: 
                 for bottle in bottles:
                     if bottle.handle_click(event):         
                         if selected_bottle is None:
@@ -154,6 +160,8 @@ def init_game():
                             if result is not None:
                                 game_state, _ = result
                                 steps_count += 1
+                                if steps_count >= MOVE_LIMIT:
+                                    move_limit_reached = True
                                 bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                                 if goal_state(game_state):
                                     puzzle_solved = True
@@ -183,6 +191,8 @@ def init_game():
                 puzzle_stuck=False
                 animation_time = 0
                 hint_count=0
+                time_limit_reached = False
+                move_limit_reached = False
                 solved_by_solver = False
                 computing_best = True
                 state_copy = game_state
@@ -238,7 +248,7 @@ def init_game():
             heuristic = heuristics_dropdown.selected
             
             #Hint button
-            if hint_btn.handle_click(event) and not solving and not event_consumed and not solving_algo and not puzzle_solved:
+            if hint_btn.handle_click(event) and not solving and not event_consumed and not solving_algo and not puzzle_solved and not time_limit_reached and not move_limit_reached:
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
                 hint_btn.loading = True
@@ -260,7 +270,8 @@ def init_game():
                 puzzle_stuck = False
                 solving_algo = True
                 solve_button.loading = True
-                
+                time_limit_reached=False
+                move_limit_reached=False
                 func = algorithms_map[algorithm]
                 heuristic_func = heuristics_map.get(heuristic)
 
@@ -288,6 +299,8 @@ def init_game():
                 animation_time = 0
                 event_consumed = True
                 hint_count=0
+                time_limit_reached = False
+                move_limit_reached = False
                 solved_by_solver = False
                 solving_algo = False
                 solve_button.loading = False
@@ -344,6 +357,8 @@ def init_game():
                 timeout = False
                 animation_time = 0
                 hint_count = 0
+                time_limit_reached = False
+                move_limit_reached = False
                 solving_algo = False
                 solve_button.loading = False
                 hint_btn.loading = False
@@ -374,6 +389,8 @@ def init_game():
                 if is_hint:
                     game_state = solution_path[1] if len(solution_path) > 1 else game_state
                     steps_count+=1
+                    if steps_count >= MOVE_LIMIT:
+                        move_limit_reached = True
                     hint_count += 1
                     bottles = get_bottles(game_state, x_start, y_start, bottle_width, bottle_height, spacing, current_difficulty)
                     if goal_state(game_state):
@@ -395,6 +412,14 @@ def init_game():
         #Draw
         screen.fill((30, 30, 30))
 
+        if time_limit_reached:
+            text = font_big.render("Time limit reached!", True, (255,80,80))
+            screen.blit(text, text.get_rect(center=(SCREEN_W//2, 30)))
+
+        if move_limit_reached:
+            text = font_big.render("Move limit reached!", True, (255,80,80))
+            screen.blit(text, text.get_rect(center=(SCREEN_W//2, 70)))
+
         jump_offset = 0
         if puzzle_solved:
             if solved_by_solver:
@@ -412,6 +437,8 @@ def init_game():
         elif not puzzle_solved:
             elapsed_time = int(time.time() - start_time)
             text = f"Time: {elapsed_time}s   Steps: {steps_count}"
+            if elapsed_time >= TIME_LIMIT and not puzzle_solved:
+                time_limit_reached = True
 
         draw_bottles(screen, game_state, bottles, selected_bottle,jump_offset)
 
