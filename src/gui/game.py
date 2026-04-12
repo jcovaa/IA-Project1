@@ -127,7 +127,6 @@ def game():
     final_time = None
     steps_count = 0
     font = pygame.font.SysFont(None, 36) #nao devia estar aqui
-    best_result = choose_best_heuristic_algorithm(game_state)
     def compute_best_result_async(state):
         def worker():
             global best_result
@@ -135,6 +134,7 @@ def game():
 
         threading.Thread(target=worker, daemon=True).start()
     hint_count=0
+    compute_best_result_async(game_state)
     #Benchmark
     benchmark_status_font = pygame.font.SysFont(None, 24)
     benchmark_running = False
