@@ -1,11 +1,10 @@
 import random
 from src.game.gameState import GameState
 
-#mudar niveis
 DIFICULTY_CONFIGS = {
     "easy":   {"bottles": (5, 6),  "capacity": (3, 4)},
-    "medium": {"bottles": (6, 8),  "capacity": (4, 5)},
-    "hard":   {"bottles": (9, 12), "capacity": (5, 6)}
+    "medium": {"bottles": (6, 7),  "capacity": (4, 5)},
+    "hard":   {"bottles": (8, 9), "capacity": (4, 5)}
 }
 
 COLOR_NAMES = [

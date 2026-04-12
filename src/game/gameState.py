@@ -124,7 +124,7 @@ def solve(func, state, *args, **kwargs):
       return result[0]
    return result
 
-def has_possible_moves(state): #rever ciclo in finito
+def has_possible_moves(state): 
     bottles = state.bottles
     capacity = state.capacity
 

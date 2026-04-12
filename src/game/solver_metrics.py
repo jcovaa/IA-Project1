@@ -1,7 +1,6 @@
 import time
 import tracemalloc
 
-
 def parse_int_or_default(value, default):
       try:
          text = (value or "").strip()
@@ -15,7 +14,7 @@ def build_solver(algorithm, heuristic_func, weight_input, limit_input):
     if algorithm == "Weighted A*":
         return {
             "heuristic": heuristic_func,
-            "weight": parse_int_or_default(weight_input.text, 2)
+            "weight": parse_int_or_default(weight_input.text, 1.5)
         }
     if algorithm in ("DLS", "IDS"):
         return {"limit": parse_int_or_default(limit_input.text, 50)}
@@ -33,6 +32,8 @@ def solution_length(node):
 
 
 def run_solver(func, game_state, goal_state_func, operators_func, solver_kwargs):
+   tracemalloc.stop() 
+   tracemalloc.clear_traces()
    tracemalloc.start()
    start = time.perf_counter()
    search_start = time.time()

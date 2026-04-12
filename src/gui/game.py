@@ -27,7 +27,10 @@ from src.search.algorithms import (
     heuristic1,
     heuristic2,
     heuristic3,
-    heuristic4
+    heuristic4,
+    heuristic5,
+    heuristic6,
+    heuristic7
 )
 
 SCREEN_W, SCREEN_H = 1280, 720
@@ -48,19 +51,21 @@ algorithms_map = {
     "IDA*": iterative_deepening_a_star_search,
 }
 
-#melhorar nomes
 heuristics_map = {
     "Heuristic 1": heuristic1,
     "Heuristic 2": heuristic2,
     "Heuristic 3": heuristic3,
-    "Heuristic 4": heuristic4
+    "Heuristic 4": heuristic4,
+    "Heuristic 5": heuristic5,
+    "Heuristic 6": heuristic6,
+    "Heuristic 7": heuristic7,
 } 
 
 
 def game():
 
     # pygame setup 
-    pygame.init() #passar para a main
+    pygame.init() 
     screen = pygame.display.set_mode((SCREEN_W, SCREEN_H)) # provsorio
     pygame.display.set_caption("Water Sort Puzzle")
     clock = pygame.time.Clock()
@@ -74,8 +79,8 @@ def game():
     selector = DifficultySelector(x=panel_x + 20, y=20)
     btn_generate = Button(x=panel_x + 20, y=225, width=160, height=45, text="Generate level", color=(50, 100, 180), hover_color=(70, 130, 210)) # Mudar a posição do botão para baixo do selector de dificuldade, e mudar o texto para "Generate Puzzle" ou algo do tipo 
     btn_load = Button(x=panel_x + 20, y=280, width=160, height=45, text="Load level", color=(60, 130, 160), hover_color=(80, 160, 190))
-    algorithms_dropdown = Dropdown(panel_x + 20, 335, 160, 40, algorithms)
-    heuristics_dropdown = Dropdown(panel_x + 20, 385, 160, 40, heuristics)
+    algorithms_dropdown = Dropdown(panel_x + 20, 335, 160, 35, algorithms)
+    heuristics_dropdown = Dropdown(panel_x + 20, 385, 160, 35, heuristics)
     solve_button = Button(x=panel_x + 20, y=600, width=160, height=45, text="Solve", color=(50, 180, 50), hover_color=(70, 210, 70))
     return_btn = Button(x=panel_x + 20, y=650, width=160, height=45, text="Return", color=(180, 50, 50), hover_color=(210, 70, 70)) 
     hint_btn = Button(x=panel_x + 20, y=550, width=160, height=45, text="Hint", color=(200, 180, 50), hover_color=(220, 210, 70))
@@ -86,14 +91,13 @@ def game():
     benchmark_btn = Button(x=panel_x + 20, y=490, width=160, height=45, text="Benchmark", color=(100, 100, 200), hover_color=(120, 120, 220))
     save_results_btn = Button(x=SCREEN_W // 2 - 90, y=SCREEN_H // 2 + 130, width=180, height=45, text="Save results", color=(50, 120, 180), hover_color=(70, 150, 210))
     
-    #valores provisorios bottles - por macro
     x_start = 100
     y_start = 100
     bottle_width = 60
     bottle_height = 200
     spacing = 40
 
-    #Game Setup - confirmar se é tudo resetado sempre
+    #Game Setup 
     #Geral
     running = True
     current_difficulty = "easy"
@@ -295,7 +299,8 @@ def game():
                 algorithm = algorithms_dropdown.selected  
 
             if algorithm in ["A*", "Greedy", "Weighted A*", "IDA*",] and not event_consumed:
-                heuristics_dropdown.handle_click(event)
+                if heuristics_dropdown.handle_click(event):
+                    event_consumed = True
 
             if algorithm in ["DLS", "IDS"] and not event_consumed:
                 if limit_input.handle_event(event):
@@ -590,7 +595,7 @@ def game():
             btn_next_move.draw(screen)
             btm_prev_move.draw(screen)
 
-        if puzzle_stuck: #melhorar maybe 
+        if puzzle_stuck:
             stuck_text = font_big.render("No moves possible!",True,(255,80,80))
             screen.blit(stuck_text,stuck_text.get_rect(center=(SCREEN_W//2, 80)))
 
