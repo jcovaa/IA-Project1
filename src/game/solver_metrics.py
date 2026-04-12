@@ -1,7 +1,6 @@
 import time
 import tracemalloc
 
-
 def parse_int_or_default(value, default):
       try:
          text = (value or "").strip()
@@ -33,6 +32,8 @@ def solution_length(node):
 
 
 def run_solver(func, game_state, goal_state_func, operators_func, solver_kwargs):
+   tracemalloc.stop() 
+   tracemalloc.clear_traces()
    tracemalloc.start()
    start = time.perf_counter()
    search_start = time.time()

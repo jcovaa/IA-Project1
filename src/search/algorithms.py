@@ -271,10 +271,10 @@ def ida_star_auxiliary(node, g, threshold, path_visited, stats, goal_state_func,
 
 def iterative_deepening_a_star_search(initial_state, goal_state_func, operators_func, start, heuristic):
     stats = {"states_visited": 0}
-    root = TreeNode(initial_state)
-    threshold = heuristic(root.state)
+    threshold = heuristic(initial_state)
 
     while True:
+        root = TreeNode(initial_state)
         path_visited = {initial_state}
         result, new_threshold = ida_star_auxiliary(root, 0, threshold, path_visited, stats, goal_state_func, operators_func, heuristic)
         if result:
