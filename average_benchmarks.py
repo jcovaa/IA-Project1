@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 
 NUMERIC_FIELDS = ["time_s", "memory_kb", "states_visited", "solution_steps", "solution_cost"]
-DIFFICULTIES = ["easy"]
+DIFFICULTIES = ["hard"]
 NUM_FILES = 3
 
 def parse_value(val):

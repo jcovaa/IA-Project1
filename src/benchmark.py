@@ -36,7 +36,7 @@ INFORMED = [
     ("A*_H2", a_star_search, {"heuristic": heuristic2}),
     ("A*_H3", a_star_search, {"heuristic": heuristic3}),
     ("A*_H4", a_star_search, {"heuristic": heuristic4}),
-    ("A*_H4", a_star_search, {"heuristic": heuristic5}),
+    ("A*_H5", a_star_search, {"heuristic": heuristic5}),
     ("A*_H6", a_star_search, {"heuristic": heuristic6}),
     ("A*_H7", a_star_search, {"heuristic": heuristic7}),
     ("WA*_H1(w=1.5)", weighted_a_star_search, {"heuristic": heuristic1, "weight": 1.5}),
