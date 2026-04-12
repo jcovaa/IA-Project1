@@ -12,7 +12,7 @@ capacity = 3
 '''
 import time
 import multiprocessing as mp
-from src.search.algorithms import (greedy_search,heuristic4)
+from src.search.algorithms import (greedy_search,heuristic7)
 
 
 class GameState:
@@ -204,7 +204,7 @@ def run_solver_choose_best_heuristic_algorithm(queue, algo_func, state, h_func):
 def choose_best_heuristic_algorithm(state, time_limit_per_run=1):
 
     algo_func = greedy_search
-    h_func = heuristic4
+    h_func = heuristic7
 
     queue = mp.Queue()
 

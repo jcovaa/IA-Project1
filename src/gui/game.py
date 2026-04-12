@@ -526,7 +526,7 @@ def game():
         #Draw
         screen.fill((30, 30, 30))
         
-        screen.blit(font.render(f"MAX Time: {TIME_LIMIT}s   MAX Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(680,20),)
+        screen.blit(font.render(f"Max Time: {TIME_LIMIT}s   Max Steps: {MOVE_LIMIT}", True, (255, 255, 255)),(20,50),)
 
 
         jump_offset = 0
