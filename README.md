@@ -1,6 +1,6 @@
 # Water Sort
 
-### AI Assignment 1 | Group_A1_13
+### AI Assignment 1
 
 ## Setup
 
