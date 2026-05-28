@@ -73,6 +73,6 @@ Click **"Benchmark"** to run all algorithms on the current puzzle automatically.
 
 ## Authors
 
-- André Cotrim up202305592
-- Dinis Noronha up202306120
-- João Vila Cova up202307756
+- André Cotrim
+- Dinis Noronha
+- João Vila Cova
